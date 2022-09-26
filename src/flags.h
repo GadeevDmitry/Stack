@@ -25,7 +25,7 @@
 //#pragma GCC diagnostic warning "-Wformat=2"
 #pragma GCC diagnostic warning "-Wignored-qualifiers"
 #pragma GCC diagnostic warning "-Wlogical-op"
-//#pragma GCC diagnostic warning "-Wnomissing-field-initializers"
+#pragma GCC diagnostic warning "-Wnomissing-field-initializers"
 #pragma GCC diagnostic warning "-Wnon-virtual-dtor"
 #pragma GCC diagnostic warning "-Woverloaded-virtual"
 #pragma GCC diagnostic warning "-Wpointer-arith"
