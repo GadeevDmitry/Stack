@@ -8,10 +8,9 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "flags.h"
-
 #define  STACK_DUMPING
 #define CANARY_PROTECTION
+#define   HASH_PROTECTION
 
 #ifdef STACK_DUMPING
 
@@ -57,6 +56,12 @@ typedef struct _Stack
 
     signed char is_Ctor;
 
+    #ifdef HASH_PROTECTION
+
+        unsigned long long hash_val;
+
+    #endif
+
     #ifdef STACK_DUMPING
 
         StackDeclaration info;
@@ -83,6 +88,7 @@ typedef struct _Stack
 *   @param MEMORY_LIMIT_EXCEEDED - memory allocation query is failed
 *
 *   @param CANARY_PROTECTION_FAILED - canary protection is failed
+*   @param   HASH_PROTECTION_FAILED - hash   protection is failed
 */
 
 typedef enum _StackError
@@ -101,7 +107,8 @@ typedef enum _StackError
 
     MEMORY_LIMIT_EXCEEDED        = 9,
 
-    CANARY_PROTECTION_FAILED     = 10
+    CANARY_PROTECTION_FAILED     = 10,
+      HASH_PROTECTION_FAILED     = 11
 
 } StackError;
 
@@ -122,7 +129,8 @@ const char *error_message[] =
     "active variables are poisoned",         // 7
     "non active variables are non poisoned", // 8
     "memory limit exceeded",                 // 9
-    "canary protection failed"               // 10
+    "canary protection failed",              // 10
+    "hash   protection failed"               // 11
 };
 
 /**
@@ -134,9 +142,6 @@ const char *error_message[] =
 *   @param POISON_CAPACITY   - poison-value for "size_t capacity"
 *   @param POISON_NAME       - poison-value for StackDeclaration's elements: variable_name, function_name, file_name
 *   @param POISON_STRING     - poison-value fors StackDeclaration's element "string_number"
-*
-*   @param  LEFT_CANARY      - value for the  left canary protection
-*   @param RIGHT_CANARY      - value for the right canary protection
 */
 
 typedef enum _Poison
@@ -146,11 +151,26 @@ typedef enum _Poison
     POISON_SIZE       = -1,
     POISON_CAPACITY   = -1,
     POISON_NAME       = 7,
-    POISON_STRING     = 0,
-     LEFT_CANARY      = 0xBAADF00D,
-    RIGHT_CANARY      = 0xDEADBEEF
+    POISON_STRING     = 0
 
 } Poison;
+
+/**
+*   @brief The enum contains any protection constants.
+*
+*   @param  LEFT_CANARY - value for the  left canary protection
+*   @param RIGHT_CANARY - value for the right canary protection
+*
+*   @param  HASH_START  - begining value of the hash
+*/
+
+typedef enum _Protection
+{
+    LEFT_CANARY  = 0xBAADF00D,
+    RIGHT_CANARY = 0xDEADBEEF,
+     HASH_START  = 0xFEEDFACE
+
+} Protection;
 
 /*----------------------------------------------FUNCTION_DECLARATION--------------------------------------------------*/
 
@@ -183,6 +203,13 @@ void make_bit_true(unsigned *const num, const unsigned bit_num);
 
     unsigned StackCheckCanary(Stack *stk, unsigned *const left_canary  = nullptr,
                                           unsigned *const right_canary = nullptr);
+
+#endif
+
+#ifdef HASH_PROTECTION
+
+    unsigned long long get_hash(void *_data_store, const size_t elem_size);
+    unsigned CheckHash(void *_data_store, const size_t elem_size, unsigned long long hash_val);
 
 #endif
 
@@ -240,7 +267,7 @@ void log_stack_elem(const Stack_elem *var)
     unsigned char current_byte_value = 0;
     unsigned char is_poison = 1;
 
-    for (int i = 0; i < sizeof(Stack_elem); ++i)
+    for (size_t i = 0; i < sizeof(Stack_elem); ++i)
     {
         current_byte_value = *((const unsigned char *) var + i);
 
@@ -294,7 +321,7 @@ void log_make_dump(Stack *stk, const char *current_file,
 
     if (stk->data == (Stack_elem *) POISON_DATA)
     {
-        fprintf(LOG_STREAM, "<font color=blue>data </font>[<font color=yellow>POISON_DATA</font>]\n\n");
+        fprintf(LOG_STREAM, "<font color=blue>data </font>[<font color=lightgreen>POISON_DATA</font>]\n\n");
         return;
     }
 
@@ -304,11 +331,22 @@ void log_make_dump(Stack *stk, const char *current_file,
 
         StackCheckCanary(stk, &left, &right);
 
-        (left  ==  LEFT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue> left_canary  = %16u </font> <font color=green> (OK) </font>\n",     left) :
-                                  fprintf(LOG_STREAM, "<font color=blue> left_canary  = %16u </font> <font color=red> (ERROR) </font>\n",    left) ;
+        (left  ==  LEFT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue>  left_canary = %16u </font> <font color=green> (OK) </font>\n",     left) :
+                                  fprintf(LOG_STREAM, "<font color=blue>  left_canary = %16u </font> <font color=red> (ERROR) </font>\n",    left) ;
 
         (right == RIGHT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue> right_canary = %16u </font> <font color=green> (OK) </font>\n",    right) :
                                   fprintf(LOG_STREAM, "<font color=blue> right_canary = %16u </font> <font color=red> (ERROR) </font>\n",   right) ;
+
+    #endif
+
+    #ifdef HASH_PROTECTION
+
+        unsigned good_hash = CheckHash(stk, stk->capacity * sizeof(Stack_elem), stk->hash_val);
+
+        if (good_hash)
+            fprintf(LOG_STREAM, "<font color=blue> hash_val = %llu </font> <font color=green>  (OK) </font>\n", stk->hash_val);
+        else
+            fprintf(LOG_STREAM, "<font color=blue> hash_val = %llu </font> <font color=red> (ERROR) </font>\n", stk->hash_val);
 
     #endif
 
@@ -437,6 +475,8 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
 
     unsigned StackCheckCanary(Stack *stk, unsigned *const left_canary, unsigned *const right_canary)
     {
+        assert(stk != nullptr);
+
         fprintf(LOG_STREAM, "CheckCanary(stk = %p)\n\n",
                                          stk);
 
@@ -454,10 +494,68 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
 
 #endif
 
+#ifdef HASH_PROTECTION
+
+    /**
+    *   @brief Counts the hash_value for the variable of any type.
+    *
+    *   @param _data_store [in] _data_store - pointer to the first byte of the variable to hash
+    *   @param   elem_size [in]   elem_size - size (in bytes)           of the variable to hash
+    *
+    *   @return hash_value
+    */
+
+    unsigned long long get_hash(void *_data_store, const size_t elem_size)
+    {
+        fprintf(LOG_STREAM, "get_hash(_data_store = %p, elem_size = %u)\n\n",
+                                      _data_store,      elem_size);
+
+        assert(_data_store != nullptr);
+
+        unsigned char *data_store = (unsigned char *) _data_store;
+        unsigned long long hash_ret = HASH_START;
+
+        for (size_t counter = 0; counter < elem_size; ++counter)
+        {
+            hash_ret = ((hash_ret << 5) + hash_ret) + data_store[counter];
+        }
+
+        fprintf(LOG_STREAM,"get_hash(void*, unsigned int) returns %llu\n\n", hash_ret);
+        return hash_ret;
+    }
+
+    /**
+    *   @brief Checks if the "hash_val" of any variable still equal to original hash.
+    *
+    *   @param _data_store [in] _data_store - pointer to the first byte of the variable to check
+    *   @param   elem_size [in]   elem_size - size (in bytes)           of the variable to check
+    *   @param    hash_val [in]    hash_val - hash value to compare with
+    *
+    *   @return true-value if the "hash_val" is right and false-value else
+    */
+
+    unsigned CheckHash(void *_data_store, const size_t elem_size, const unsigned long long hash_val)
+    {
+        fprintf(LOG_STREAM, "CheckHash(_data_store = %p, elem_size = %u, hash_val = %llu)\n\n",
+                                       _data_store,      elem_size,      hash_val);
+
+        assert(_data_store != nullptr);
+
+        unsigned long long     old_hash = hash_val;
+        unsigned long long current_hash = get_hash(_data_store, elem_size);
+
+        unsigned ret = (old_hash == current_hash);
+
+        log_func_end(__PRETTY_FUNCTION__, ret);
+        return ret;
+    }
+
+#endif
+
 #ifdef STACK_DUMPING
 
     #define Stack_assert(stk_ptr, err)                                                          \
-            if ((*err = StackVerify(stk_ptr)))                                                    \
+            if ((*err = StackVerify(stk_ptr)))                                                  \
             {                                                                                   \
                 StackDump(stk_ptr, *err, __FILE__, __PRETTY_FUNCTION__, __LINE__);              \
                                                                                                 \
@@ -467,7 +565,7 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
 #else
 
     #define Stack_assert(stk_ptr, err)                                                          \
-            if ((*err = StackVerify(stk_ptr)))                                                    \
+            if ((*err = StackVerify(stk_ptr)))                                                  \
             {                                                                                   \
                 log_func_end(__PRETTY_FUNCTION__, *err);                                        \
                 return *err;                                                                    \
@@ -602,7 +700,6 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
                  temp_data_store = (unsigned *) (stk->data + stk->capacity);
                 *temp_data_store = (unsigned) RIGHT_CANARY;
             }
-
         #else
 
             if (capacity)
@@ -624,6 +721,12 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
 
         if (stk->capacity)
             FillPoison(stk->data, sizeof(Stack_elem), 0, capacity, (unsigned char) POISON_BYTE);
+
+        #ifdef HASH_PROTECTION
+
+            stk->hash_val = get_hash(stk->data, stk->capacity * sizeof(Stack_elem));
+
+        #endif
 
         Stack_assert(stk, &err);
 
@@ -714,6 +817,13 @@ unsigned StackVerify(Stack *stk)
 
     #endif
 
+    #ifdef HASH_PROTECTION
+
+        if (!CheckHash(stk->data, stk->capacity * sizeof(Stack_elem), stk->hash_val))
+            make_bit_true(&err, HASH_PROTECTION_FAILED);
+
+    #endif
+
     log_func_end(__PRETTY_FUNCTION__, err);
     return err;
 }
@@ -754,6 +864,12 @@ unsigned StackPush(Stack *stk, const Stack_elem push_val)
     {
         stk->data[stk->size++] = push_val;
 
+        #ifdef HASH_PROTECTION
+
+            stk->hash_val = get_hash(stk->data, stk->capacity * sizeof(Stack_elem));
+
+        #endif
+
         Stack_assert(stk, &err);
 
         log_func_end(__PRETTY_FUNCTION__, STACK_OK);
@@ -771,6 +887,12 @@ unsigned StackPush(Stack *stk, const Stack_elem push_val)
     }
 
     stk->data[stk->size++] = push_val;
+
+    #ifdef HASH_PROTECTION
+
+        stk->hash_val = get_hash(stk->data, stk->capacity * sizeof(Stack_elem));
+
+    #endif
 
     Stack_assert(stk, &err);
 
@@ -817,6 +939,12 @@ unsigned StackPop(Stack *stk, Stack_elem *const front_val)
         *front_val = stk->data[stk->size];
 
     FillPoison(stk->data, sizeof(Stack_elem), stk->size, stk->size + 1, (unsigned char) POISON_BYTE);
+
+    #ifdef HASH_PROTECTION
+
+        stk->hash_val = get_hash(stk->data, stk->capacity * sizeof(Stack_elem));
+
+    #endif
 
     Stack_assert(stk, &err);
 
@@ -900,6 +1028,12 @@ unsigned StackRealloc(Stack *stk, const int condition)
 
     FillPoison(stk->data, sizeof(Stack_elem), stk->size, stk->capacity, (unsigned char) POISON_BYTE);
 
+    #ifdef HASH_PROTECTION
+
+        stk->hash_val = get_hash(stk->data, stk->capacity * sizeof(Stack_elem));
+
+    #endif
+
     Stack_assert(stk, &err);
 
     log_func_end(__PRETTY_FUNCTION__, STACK_OK);
@@ -946,6 +1080,12 @@ unsigned StackDtor(Stack *stk)
 
         stk->info.variable_name  = stk->info.function_name = stk->info.file_name = (const char *) POISON_NAME;
         stk->info.string_number = POISON_STRING;
+
+    #endif
+
+    #ifdef HASH_PROTECTION
+
+        stk->hash_val = 0;
 
     #endif
 

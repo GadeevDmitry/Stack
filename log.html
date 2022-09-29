@@ -1,44 +1,64 @@
 <pre>
 "log.html" OPENING IS OK
 
-(dumping)_StackCtor(stk = 0064FEDC, capacity = 0,
+(dumping)_StackCtor(stk = 0064FED0, capacity = 0,
                                              stk_name = "&testing"
                                              stk_func = "int main()"
                                              stk_file = "test1.cpp"
-                                             stk_line = 12)
+                                             stk_line = 1108)
 
-StackVerify(stk = 0064FEDC)
+get_hash(_data_store = 007E2F24, elem_size = 0)
 
-CheckCanary(stk = 0064FEDC)
+get_hash(void*, unsigned int) returns 4277009102
+
+StackVerify(stk = 0064FED0)
+
+CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+CheckHash(_data_store = 007E2F24, elem_size = 0, hash_val = 4277009102)
+
+get_hash(_data_store = 007E2F24, elem_size = 0)
+
+get_hash(void*, unsigned int) returns 4277009102
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
 
 unsigned int StackVerify(Stack*) returns 0
 
 unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 0
 
-StackDtor(stk = 0064FEDC)
+StackDtor(stk = 0064FED0)
 
-StackVerify(stk = 0064FEDC)
+StackVerify(stk = 0064FED0)
 
-CheckCanary(stk = 0064FEDC)
+CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+CheckHash(_data_store = 007E2F24, elem_size = 0, hash_val = 4277009102)
+
+get_hash(_data_store = 007E2F24, elem_size = 0)
+
+get_hash(void*, unsigned int) returns 4277009102
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
 
 unsigned int StackVerify(Stack*) returns 0
 
 unsigned int StackDtor(Stack*) returns 0
 
-StackDtor(stk = 0064FEDC)
+StackDtor(stk = 0064FED0)
 
-StackVerify(stk = 0064FEDC)
+StackVerify(stk = 0064FED0)
 
 unsigned int StackVerify(Stack*) returns 228
 
-StackDump(stk = 0064FEDC, err = 228,
-                              current_file = "src/stack.h"
+StackDump(stk = 0064FED0, err = 228,
+                              current_file = "test1.cpp"
                               current_func = "unsigned int StackDtor(Stack*)"
-                              current_line = 924)
+                              current_line = 1063)
 
 <font color=red> MESSAGE_ERRORS: </font>
 <font color=red> stack is not constructed </font>
@@ -47,72 +67,93 @@ StackDump(stk = 0064FEDC, err = 228,
 <font color=red> active variables are poisoned </font>
 
 <font color=blue> ERROR occurred at:
-FILE: src/stack.h
+FILE: test1.cpp
 FUNC: unsigned int StackDtor(Stack*)
-LINE: 924 </font>
+LINE: 1063 </font>
 
-<font color=blue> Stack[0064FEDC] "POISON_NAME" was constructed at
+<font color=blue> Stack[0064FED0] "POISON_NAME" was constructed at
 file: "POISON_NAME"
 func: "POISON_NAME"
 line: "0"
 {
 size     = 4294967295
 capacity = 4294967295
-</font><font color=blue>data </font>[<font color=yellow>POISON_DATA</font>]
+</font><font color=blue>data </font>[<font color=lightgreen>POISON_DATA</font>]
 
 void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
 
 unsigned int StackDtor(Stack*) returns 228
 
-(dumping)_StackCtor(stk = 0064FEDC, capacity = 0,
+(dumping)_StackCtor(stk = 0064FED0, capacity = 0,
                                              stk_name = "&testing"
                                              stk_func = "int main()"
                                              stk_file = "test1.cpp"
-                                             stk_line = 17)
+                                             stk_line = 1113)
 
-StackVerify(stk = 0064FEDC)
+get_hash(_data_store = 007E2F24, elem_size = 0)
 
-CheckCanary(stk = 0064FEDC)
+get_hash(void*, unsigned int) returns 4277009102
+
+StackVerify(stk = 0064FED0)
+
+CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+CheckHash(_data_store = 007E2F24, elem_size = 0, hash_val = 4277009102)
+
+get_hash(_data_store = 007E2F24, elem_size = 0)
+
+get_hash(void*, unsigned int) returns 4277009102
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
 
 unsigned int StackVerify(Stack*) returns 0
 
 unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 0
 
-(dumping)_StackCtor(stk = 0064FEDC, capacity = 0,
+(dumping)_StackCtor(stk = 0064FED0, capacity = 0,
                                              stk_name = "&testing"
                                              stk_func = "int main()"
                                              stk_file = "test1.cpp"
-                                             stk_line = 18)
+                                             stk_line = 1114)
 
-StackDump(stk = 0064FEDC, err = 8,
-                              current_file = "src/stack.h"
+StackDump(stk = 0064FED0, err = 8,
+                              current_file = "test1.cpp"
                               current_func = "unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int)"
-                              current_line = 566)
+                              current_line = 669)
 
 <font color=red> MESSAGE_ERRORS: </font>
 <font color=red> stack is already constructed </font>
 
 <font color=blue> ERROR occurred at:
-FILE: src/stack.h
+FILE: test1.cpp
 FUNC: unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int)
-LINE: 566 </font>
+LINE: 669 </font>
 
-<font color=blue> Stack[0064FEDC] "testing" was constructed at
+<font color=blue> Stack[0064FED0] "testing" was constructed at
 file: "test1.cpp"
 func: "int main()"
-line: "17"
+line: "1113"
 {
 size     = 0
 capacity = 0
-</font>CheckCanary(stk = 0064FEDC)
+</font>CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
 
-<font color=blue> left_canary  =       3131961357 </font> <font color=green> (OK) </font>
+<font color=blue>  left_canary =       3131961357 </font> <font color=green> (OK) </font>
 <font color=blue> right_canary =       3735928559 </font> <font color=green> (OK) </font>
-<font color=blue>data[00B52F24]
+CheckHash(_data_store = 0064FED0, elem_size = 0, hash_val = 4277009102)
+
+get_hash(_data_store = 0064FED0, elem_size = 0)
+
+get_hash(void*, unsigned int) returns 4277009102
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+
+<font color=blue> hash_val = 4277009102 </font> <font color=green>  (OK) </font>
+<font color=blue>data[007E2F24]
 	{
 </font>	}
 
@@ -120,97 +161,177 @@ void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
 
 unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 8
 
-StackPush(stk = 0064FEDC, push_val = <font color=blue>44</font><font color=blue>1</font><font color=blue>0</font><font color=blue>0</font>)
+StackPush(stk = 0064FED0, push_val = <font color=blue>44</font><font color=blue>1</font><font color=blue>0</font><font color=blue>0</font>)
 
-StackVerify(stk = 0064FEDC)
+StackVerify(stk = 0064FED0)
 
-CheckCanary(stk = 0064FEDC)
-
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
-
-unsigned int StackVerify(Stack*) returns 0
-
-StackRealloc(stk = 0064FEDC, condition = 1)
-
-StackVerify(stk = 0064FEDC)
-
-CheckCanary(stk = 0064FEDC)
+CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
 
+CheckHash(_data_store = 007E2F24, elem_size = 0, hash_val = 4277009102)
+
+get_hash(_data_store = 007E2F24, elem_size = 0)
+
+get_hash(void*, unsigned int) returns 4277009102
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+
 unsigned int StackVerify(Stack*) returns 0
 
-FillPoison(_fillable_elem = 00B52F84, elem_size = 4,
+StackRealloc(stk = 0064FED0, condition = 1)
+
+StackVerify(stk = 0064FED0)
+
+CheckCanary(stk = 0064FED0)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+CheckHash(_data_store = 007E2F24, elem_size = 0, hash_val = 4277009102)
+
+get_hash(_data_store = 007E2F24, elem_size = 0)
+
+get_hash(void*, unsigned int) returns 4277009102
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+
+unsigned int StackVerify(Stack*) returns 0
+
+FillPoison(_fillable_elem = 007E2F84, elem_size = 4,
                                                 left  = 0,
                                                 right = 4, poison_val = 167)
 
 void FillPoison(void*, size_t, unsigned int, unsigned int, unsigned char) returns 0
 
-StackVerify(stk = 0064FEDC)
+get_hash(_data_store = 007E2F84, elem_size = 16)
 
-CheckCanary(stk = 0064FEDC)
+get_hash(void*, unsigned int) returns 2369458220270283326
+
+StackVerify(stk = 0064FED0)
+
+CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+CheckHash(_data_store = 007E2F84, elem_size = 16, hash_val = 2369458220270283326)
+
+get_hash(_data_store = 007E2F84, elem_size = 16)
+
+get_hash(void*, unsigned int) returns 2369458220270283326
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
 
 unsigned int StackVerify(Stack*) returns 0
 
 unsigned int StackRealloc(Stack*, int) returns 0
 
-StackVerify(stk = 0064FEDC)
+get_hash(_data_store = 007E2F84, elem_size = 16)
 
-CheckCanary(stk = 0064FEDC)
+get_hash(void*, unsigned int) returns 5472325409449689295
+
+StackVerify(stk = 0064FED0)
+
+CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+CheckHash(_data_store = 007E2F84, elem_size = 16, hash_val = 5472325409449689295)
+
+get_hash(_data_store = 007E2F84, elem_size = 16)
+
+get_hash(void*, unsigned int) returns 5472325409449689295
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
 
 unsigned int StackVerify(Stack*) returns 0
 
 unsigned int StackPush(Stack*, Stack_elem) returns 0
 
-StackPop(stk = 0064FEDC, front_val = 0064FEFC)
+StackPop(stk = 0064FED0, front_val = 0064FEFC)
 
-StackVerify(stk = 0064FEDC)
+StackVerify(stk = 0064FED0)
 
-CheckCanary(stk = 0064FEDC)
+CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
 
+CheckHash(_data_store = 007E2F84, elem_size = 16, hash_val = 5472325409449689295)
+
+get_hash(_data_store = 007E2F84, elem_size = 16)
+
+get_hash(void*, unsigned int) returns 5472325409449689295
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+
 unsigned int StackVerify(Stack*) returns 0
 
-FillPoison(_fillable_elem = 00B52F84, elem_size = 4,
+FillPoison(_fillable_elem = 007E2F84, elem_size = 4,
                                                 left  = 0,
                                                 right = 1, poison_val = 167)
 
 void FillPoison(void*, size_t, unsigned int, unsigned int, unsigned char) returns 0
 
-StackVerify(stk = 0064FEDC)
+get_hash(_data_store = 007E2F84, elem_size = 16)
 
-CheckCanary(stk = 0064FEDC)
+get_hash(void*, unsigned int) returns 2369458220270283326
 
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+StackVerify(stk = 0064FED0)
 
-unsigned int StackVerify(Stack*) returns 0
-
-StackRealloc(stk = 0064FEDC, condition = 0)
-
-StackVerify(stk = 0064FEDC)
-
-CheckCanary(stk = 0064FEDC)
+CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
 
+CheckHash(_data_store = 007E2F84, elem_size = 16, hash_val = 2369458220270283326)
+
+get_hash(_data_store = 007E2F84, elem_size = 16)
+
+get_hash(void*, unsigned int) returns 2369458220270283326
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+
 unsigned int StackVerify(Stack*) returns 0
 
-FillPoison(_fillable_elem = 00B52F84, elem_size = 4,
+StackRealloc(stk = 0064FED0, condition = 0)
+
+StackVerify(stk = 0064FED0)
+
+CheckCanary(stk = 0064FED0)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+CheckHash(_data_store = 007E2F84, elem_size = 16, hash_val = 2369458220270283326)
+
+get_hash(_data_store = 007E2F84, elem_size = 16)
+
+get_hash(void*, unsigned int) returns 2369458220270283326
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+
+unsigned int StackVerify(Stack*) returns 0
+
+FillPoison(_fillable_elem = 007E2F84, elem_size = 4,
                                                 left  = 0,
                                                 right = 0, poison_val = 167)
 
 void FillPoison(void*, size_t, unsigned int, unsigned int, unsigned char) returns 0
 
-StackVerify(stk = 0064FEDC)
+get_hash(_data_store = 007E2F84, elem_size = 0)
 
-CheckCanary(stk = 0064FEDC)
+get_hash(void*, unsigned int) returns 4277009102
+
+StackVerify(stk = 0064FED0)
+
+CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+CheckHash(_data_store = 007E2F84, elem_size = 0, hash_val = 4277009102)
+
+get_hash(_data_store = 007E2F84, elem_size = 0)
+
+get_hash(void*, unsigned int) returns 4277009102
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
 
 unsigned int StackVerify(Stack*) returns 0
 
@@ -218,43 +339,60 @@ unsigned int StackRealloc(Stack*, int) returns 0
 
 unsigned int StackPop(Stack*, Stack_elem*) returns 0
 
-StackPop(stk = 0064FEDC, front_val = 0064FEFC)
+StackPop(stk = 0064FED0, front_val = 0064FEFC)
 
-StackVerify(stk = 0064FEDC)
+StackVerify(stk = 0064FED0)
 
-CheckCanary(stk = 0064FEDC)
+CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
 
+CheckHash(_data_store = 007E2F84, elem_size = 0, hash_val = 4277009102)
+
+get_hash(_data_store = 007E2F84, elem_size = 0)
+
+get_hash(void*, unsigned int) returns 4277009102
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+
 unsigned int StackVerify(Stack*) returns 0
 
-StackDump(stk = 0064FEDC, err = 16,
-                              current_file = "src/stack.h"
+StackDump(stk = 0064FED0, err = 16,
+                              current_file = "test1.cpp"
                               current_func = "unsigned int StackPop(Stack*, Stack_elem*)"
-                              current_line = 806)
+                              current_line = 933)
 
 <font color=red> MESSAGE_ERRORS: </font>
 <font color=red> stack is empty </font>
 
 <font color=blue> ERROR occurred at:
-FILE: src/stack.h
+FILE: test1.cpp
 FUNC: unsigned int StackPop(Stack*, Stack_elem*)
-LINE: 806 </font>
+LINE: 933 </font>
 
-<font color=blue> Stack[0064FEDC] "testing" was constructed at
+<font color=blue> Stack[0064FED0] "testing" was constructed at
 file: "test1.cpp"
 func: "int main()"
-line: "17"
+line: "1113"
 {
 size     = 0
 capacity = 0
-</font>CheckCanary(stk = 0064FEDC)
+</font>CheckCanary(stk = 0064FED0)
 
 unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
 
-<font color=blue> left_canary  =       3131961357 </font> <font color=green> (OK) </font>
+<font color=blue>  left_canary =       3131961357 </font> <font color=green> (OK) </font>
 <font color=blue> right_canary =       3735928559 </font> <font color=green> (OK) </font>
-<font color=blue>data[00B52F84]
+CheckHash(_data_store = 0064FED0, elem_size = 0, hash_val = 4277009102)
+
+get_hash(_data_store = 0064FED0, elem_size = 0)
+
+get_hash(void*, unsigned int) returns 4277009102
+
+unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+
+<font color=blue> hash_val = 4277009102 </font> <font color=green>  (OK) </font>
+<font color=blue>data[007E2F84]
 	{
 </font>	}
 
