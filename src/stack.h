@@ -304,11 +304,11 @@ void log_make_dump(Stack *stk, const char *current_file,
 
         StackCheckCanary(stk, &left, &right);
 
-        (left  ==  LEFT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue> left_canary  = %u </font> <font color=green> (OK) </font>\n",     left) :
-                                  fprintf(LOG_STREAM, "<font color=blue> left_canary  = %u </font> <font color=red> (ERROR) </font>\n",    left) ;
+        (left  ==  LEFT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue> left_canary  = %16u </font> <font color=green> (OK) </font>\n",     left) :
+                                  fprintf(LOG_STREAM, "<font color=blue> left_canary  = %16u </font> <font color=red> (ERROR) </font>\n",    left) ;
 
-        (right == RIGHT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue> right_canary = %u </font> <font color=green> (OK) </font>\n",    right) :
-                                  fprintf(LOG_STREAM, "<font color=blue> right_canary = %u </font> <font color=red> (ERROR) </font>\n",   right) ;
+        (right == RIGHT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue> right_canary = %16u </font> <font color=green> (OK) </font>\n",    right) :
+                                  fprintf(LOG_STREAM, "<font color=blue> right_canary = %16u </font> <font color=red> (ERROR) </font>\n",   right) ;
 
     #endif
 
@@ -888,7 +888,7 @@ unsigned StackRealloc(Stack *stk, const int condition)
 
         stk->data = (Stack_elem *) (temp_data_store + 1);
 
-        *(int *) (stk->data + stk->capacity) = RIGHT_CANARY;
+        *(int *) (stk->data + future_capacity) = RIGHT_CANARY;
 
     #else
 
