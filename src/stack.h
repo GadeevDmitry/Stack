@@ -1,10 +1,17 @@
+/** @file */
+
 #ifndef STACK_H
 #define STACK_H
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+#include <inttypes.h>
 
-#define STACK_DUMPING
+#include "flags.h"
+
+#define  STACK_DUMPING
+#define CANARY_PROTECTION
 
 #ifdef STACK_DUMPING
 
@@ -74,6 +81,8 @@ typedef struct _Stack
 *   @param NON_ACTIVE_NON_POISON_VALUES - refuse elements are non-poison
 *
 *   @param MEMORY_LIMIT_EXCEEDED - memory allocation query is failed
+*
+*   @param CANARY_PROTECTION_FAILED - canary protection is failed
 */
 
 typedef enum _StackError
@@ -90,7 +99,9 @@ typedef enum _StackError
             ACTIVE_POISON_VALUES = 7,
     NON_ACTIVE_NON_POISON_VALUES = 8,
 
-    MEMORY_LIMIT_EXCEEDED        = 9
+    MEMORY_LIMIT_EXCEEDED        = 9,
+
+    CANARY_PROTECTION_FAILED     = 10
 
 } StackError;
 
@@ -99,17 +110,19 @@ typedef enum _StackError
 *   @brief Index of message is equal to corresponding error-value in the "enum _StackError".
 */
 
-const char *error_message[] = {
-    "OK",
-    "pointer to the stack is nullptr",
-    "stack is not constructed",
-    "stack is already constructed",
-    "stack is empty",
-    "capacity invalid",
-    "size invalid",
-    "active variables are poisoned",
-    "non active variables are non poisoned",
-    "memory limit exceeded"
+const char *error_message[] =
+{
+    "OK",                                    // 0
+    "pointer to the stack is nullptr",       // 1
+    "stack is not constructed",              // 2
+    "stack is already constructed",          // 3
+    "stack is empty",                        // 4
+    "capacity invalid",                      // 5
+    "size invalid",                          // 6
+    "active variables are poisoned",         // 7
+    "non active variables are non poisoned", // 8
+    "memory limit exceeded",                 // 9
+    "canary protection failed"               // 10
 };
 
 /**
@@ -121,6 +134,9 @@ const char *error_message[] = {
 *   @param POISON_CAPACITY   - poison-value for "size_t capacity"
 *   @param POISON_NAME       - poison-value for StackDeclaration's elements: variable_name, function_name, file_name
 *   @param POISON_STRING     - poison-value fors StackDeclaration's element "string_number"
+*
+*   @param  LEFT_CANARY      - value for the  left canary protection
+*   @param RIGHT_CANARY      - value for the right canary protection
 */
 
 typedef enum _Poison
@@ -130,42 +146,97 @@ typedef enum _Poison
     POISON_SIZE       = -1,
     POISON_CAPACITY   = -1,
     POISON_NAME       = 7,
-    POISON_STRING     = 0
+    POISON_STRING     = 0,
+     LEFT_CANARY      = 0xBAADF00D,
+    RIGHT_CANARY      = 0xDEADBEEF
 
 } Poison;
 
-/*------------------------------LOG_FUNCTIONS---------------------------------*/
-/*----------------------------------------------------------------------------*/
+/*----------------------------------------------FUNCTION_DECLARATION--------------------------------------------------*/
 
-const char *log_file_name = "log.txt";
-FILE       *log_stream    = nullptr;
+unsigned StackVerify(Stack *stk);
 
-#define fop()                                               \
-        log_stream = fopen(log_file_name, "a");             \
-                                                            \
-        if (log_stream == nullptr)                          \
-            return;
+unsigned StackPush   (Stack *stk, const Stack_elem push_val);
+unsigned StackPop    (Stack *stk, Stack_elem *const front_val = nullptr);
+unsigned StackDtor   (Stack *stk);
+unsigned StackRealloc(Stack *stk, const int condition);
+
+unsigned  PoisonCheck(void *_verifiable_elem, const size_t elem_size, const unsigned char poison_val,
+                                                                      const unsigned char mode);
+void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned left,
+                                                              const unsigned right, const unsigned char poison_val);
+void make_bit_true(unsigned *const num, const unsigned bit_num);
+
+#ifdef STACK_DUMPING
+
+    void StackDump(Stack *stk, const unsigned err, const char *current_file,
+                                                   const char *current_func,
+                                                   const char *current_line);
+
+    unsigned _StackCtor(Stack *stk, int capacity, const char *stk_name,
+                                                  const char *stk_func,
+                                                  const char *stk_file, const int stk_line);
+
+#endif
+
+#ifdef CANARY_PROTECTION
+
+    unsigned StackCheckCanary(Stack *stk, unsigned *const left_canary  = nullptr,
+                                          unsigned *const right_canary = nullptr);
+
+#endif
+
+/*--------------------------------------------------LOG_FUNCTIONS----------------------------------------------------*/
+
+const char *LOG_FILE_NAME = "log.html";
+FILE       *LOG_STREAM    = nullptr;
+
+/**
+*   @brief Opens log-file. Ckecks if opening is OK and in this case prints message in the log-file.
+*
+*   @return 1 if checking is OK. Does abort() if an ERROR found.
+*/
+
+int OPEN_LOG_STREAM()
+{
+    LOG_STREAM = fopen(LOG_FILE_NAME, "w");
+    assert( LOG_STREAM != nullptr);
+
+    setvbuf(LOG_STREAM,   nullptr, _IONBF, 0);
+
+    fprintf(LOG_STREAM, "<pre>\n""\"%s\" OPENING IS OK\n\n", LOG_FILE_NAME);
+    return 1;
+}
+
+/**
+*   @brief Closes log-file. Called using atexit().
+*
+*   @return 1 if closing is OK. Does abort() if an ERROR found.
+*/
+
+void CLOSE_LOG_STREAM()
+{
+    assert(LOG_STREAM != nullptr);
+
+    fprintf(LOG_STREAM, "\"%s\" CLOSING IS OK\n\n", LOG_FILE_NAME);
+    fclose( LOG_STREAM);
+}
+
+int  _OPEN_LOG_STREAM = OPEN_LOG_STREAM();
+int _CLOSE_LOG_STREAM = atexit(CLOSE_LOG_STREAM);
 
 void log_message(const char *message)
 {
-    fop();
-
-    fprintf(log_stream, "%s\n", message);
-    fclose( log_stream);
+    fprintf(LOG_STREAM, "<font color=red> %s </font>\n", message);
 }
 
 void log_func_end(const char *function_name, unsigned err)
 {
-    fop();
-
-    fprintf(log_stream, "%s returns %d\n\n", function_name, err);
-    fclose( log_stream);
+    fprintf(LOG_STREAM, "%s returns %d\n\n", function_name, err);
 }
 
 void log_stack_elem(const Stack_elem *var)
 {
-    fop();
-
     unsigned char current_byte_value = 0;
     unsigned char is_poison = 1;
 
@@ -176,206 +247,235 @@ void log_stack_elem(const Stack_elem *var)
         if (current_byte_value != (unsigned char) POISON_BYTE)
             is_poison = 0;
 
-        fprintf(log_stream, "%u", current_byte_value);
+        fprintf(LOG_STREAM, "<font color=blue>%u</font>", current_byte_value);
     }
 
     if (is_poison)
-        fprintf(log_stream, " (POISON)");
-
-    fclose(log_stream);
+        fprintf(LOG_STREAM, " <font color=yellow> (POISON) </font>");
 }
 
-void log_make_dump(Stack *stk, const unsigned err, const char *current_file,
-                                                   const char *current_func,
-                                                   int         current_line)
+void log_make_dump(Stack *stk, const char *current_file,
+                               const char *current_func,
+                               int         current_line)
 {
-    fop();
-
-    fprintf(log_stream, "\nERROR occurred at:\n"
+    fprintf(LOG_STREAM, "\n<font color=blue> ERROR occurred at:\n"
                         "FILE: %s\n"
                         "FUNC: %s\n"
-                        "LINE: %d\n\n", current_file, current_func, current_line);
+                        "LINE: %d </font>\n\n", current_file, current_func, current_line);
 
     if (stk == nullptr)
     {
-        fprintf(log_stream, "Stack[nullptr]\n");
-        fclose( log_stream);
+        fprintf(LOG_STREAM, "Stack[nullptr]\n");
         return;
     }
 
-    fprintf(log_stream, "Stack[%p] \"%s\" was constructed at\n"
+    if (stk->info.variable_name == nullptr) stk->info.variable_name = "nullptr";
+    if (stk->info.file_name     == nullptr) stk->info.file_name     = "nullptr";
+    if (stk->info.function_name == nullptr) stk->info.function_name = "nullptr";
+
+    if (stk->info.variable_name == (const char *) POISON_NAME) stk->info.variable_name = "POISON_NAME";
+    if (stk->info.file_name     == (const char *) POISON_NAME) stk->info.file_name     = "POISON_NAME";
+    if (stk->info.function_name == (const char *) POISON_NAME) stk->info.function_name = "POISON_NAME";
+
+    fprintf(LOG_STREAM, "<font color=blue> Stack[%p] \"%s\" was constructed at\n"
                             "file: \"%s\"\n"
                             "func: \"%s\"\n"
                             "line: \"%d\"\n"
                             "{\n"
                             "size     = %u\n"
-                            "capacity = %u\n"
-                            "data[%p]\n",   stk, stk->info.variable_name,
-                                            stk->info.file_name, stk->info.function_name, stk->info.string_number,
-                                            stk->size, stk->capacity, stk->data);
-
+                            "capacity = %u\n</font>", stk, stk->info.variable_name,
+                                               stk->info.file_name, stk->info.function_name, stk->info.string_number,
+                                               stk->size, stk->capacity);
     if (stk->data == nullptr)
     {
-        putc('\n', log_stream);
-
-        fclose(log_stream);
+        fprintf(LOG_STREAM, "<font color=blue>data[nullptr]\n\n </font>");
         return;
     }
 
-    putc('\t', log_stream);
-    putc('{',  log_stream);
-    putc('\n', log_stream);
-
-    for (int data_counter = 0; data_counter < stk->capacity; ++data_counter)
+    if (stk->data == (Stack_elem *) POISON_DATA)
     {
-        putc('\t', log_stream);
+        fprintf(LOG_STREAM, "<font color=blue>data </font>[<font color=yellow>POISON_DATA</font>]\n\n");
+        return;
+    }
 
-        if (data_counter < stk->size)
-            putc('*', log_stream);
-        else
-            putc(' ', log_stream);
+    #ifdef CANARY_PROTECTION
 
-        fprintf(log_stream, "[%d] = ", data_counter);
-        fclose( log_stream);
+        unsigned left = 0, right = 0;
+
+        StackCheckCanary(stk, &left, &right);
+
+        (left  ==  LEFT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue> left_canary  = %u </font> <font color=green> (OK) </font>\n",     left) :
+                                  fprintf(LOG_STREAM, "<font color=blue> left_canary  = %u </font> <font color=red> (ERROR) </font>\n",    left) ;
+
+        (right == RIGHT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue> right_canary = %u </font> <font color=green> (OK) </font>\n",    right) :
+                                  fprintf(LOG_STREAM, "<font color=blue> right_canary = %u </font> <font color=red> (ERROR) </font>\n",   right) ;
+
+    #endif
+
+    fprintf(LOG_STREAM, "<font color=blue>data[%p]\n\t{\n</font>", stk->data);
+
+    for (size_t data_counter = 0; data_counter < stk->capacity; ++data_counter)
+    {
+        putc('\t', LOG_STREAM);
+
+        (data_counter < stk->size) ? putc('*', LOG_STREAM) : putc(' ', LOG_STREAM);
+
+        fprintf(LOG_STREAM, "<font color=blue>[%d] = </font>", data_counter);
 
         log_stack_elem(stk->data + data_counter);
 
-        fop();
-        putc('\n', log_stream);
+        putc('\n', LOG_STREAM);
     }
-    putc('\t', log_stream);
-    putc('}',  log_stream);
-    putc('\n', log_stream);
-    putc('\n', log_stream);
-
-    fclose(log_stream);
-}
-
-void log_dump(Stack *stk, const unsigned err, const char *current_file,
-                                              const char *current_func,
-                                              int         current_line)
-{
-    fop();
-
-    fprintf(log_stream, "StackDump(stk = \"%s\", err = %u, current_file = \"%s\"\n"
-                        "                                  current_func = \"%s\"\n"
-                        "                                  current_line = %d)\n\n",
-    stk->info.variable_name, err, current_file, current_func, current_line);
-
-    fclose(log_stream);
+    fprintf(LOG_STREAM, "\t}\n\n");
 }
 
 void log_dumping_ctor(Stack *stk, const int capacity, const char *stk_name,
                                                       const char *stk_func,
                                                       const char *stk_file, const int stk_line)
 {
-    fop();
+    if (stk_name == nullptr) stk_name = "nullptr";
+    if (stk_func == nullptr) stk_func = "nullptr";
+    if (stk_file == nullptr) stk_file = "nullptr";
 
-    if (stk_name == nullptr)
-        stk_name = "nullptr";
-
-    if (stk_func == nullptr)
-        stk_func = "nullptr";
-
-    if (stk_file == nullptr)
-        stk_file = "nullptr";
-
-    fprintf(log_stream, "(dumping)_StackCtor(stk = %p, capacity = %d, stk_name = \"%s\"\n"
+    fprintf(LOG_STREAM, "(dumping)_StackCtor(stk = %p, capacity = %d,\n"
+                        "                                             stk_name = \"%s\"\n"
                         "                                             stk_func = \"%s\"\n"
                         "                                             stk_file = \"%s\"\n"
                         "                                             stk_line = %d)\n\n",
-    stk, capacity, stk_name, stk_func, stk_file, stk_line);
-
-    fclose(log_stream);
-}
-
-void log_verify(Stack *stk)
-{
-    fop();
-
-    fprintf(log_stream, "StackVerify(stk = %p)\n\n", stk);
-    fclose( log_stream);
+                                             stk,      capacity,      stk_name,
+                                                                      stk_func,
+                                                                      stk_file,
+                                                                      stk_line);
 }
 
 void log_push(Stack *stk, const Stack_elem push_val)
 {
-    fop();
-
-    fprintf(log_stream, "StackPush(stk = %p, push_val = ", stk);
-    fclose( log_stream);
+    fprintf(LOG_STREAM, "StackPush(stk = %p, push_val = ", stk);
 
     log_stack_elem(&push_val);
 
-    fop();
-
-    fprintf(log_stream, ")\n\n");
-    fclose( log_stream);
+    fprintf(LOG_STREAM, ")\n\n");
 }
 
-void log_pop(Stack *stk, Stack_elem *const front_val)
+/*--------------------------------------------------------------------------------------------------------------------*/
+
+/**
+*   @brief Works in 2 modes.
+*   @brief Checks if the variable is filled by "poison_val"     in the first  mode.
+*   @brief Checks if the variable doesn't have any poison bytes in the second mode.
+*
+*   @param _verifiable_elem [in] _verifiable_elem - pointer         to the variable to check
+*   @param        elem_size [in]        elem_size - size (in bytes) of the variable to check
+*   @param       poison_val [in]       poison_val - poison value to compare with
+*   @param             mode [in]             mode - mode of "PoisonCheck()"
+*
+*   @return In the first  mode: 1 if all bytes are     equal to "poison_value" and 0 else
+*   @return In the zero   mode: 1 if all bytes are not equal to "poison_value" and 0 else
+*/
+
+unsigned PoisonCheck(void *_verifiable_elem, const size_t elem_size, const unsigned char poison_val,
+                                                                const unsigned char mode)
 {
-    fop();
+    assert(_verifiable_elem != nullptr);
 
-    fprintf(log_stream, "StackPop(stk = %p, front_val = %p)\n\n", stk, front_val);
-    fclose( log_stream);
+    const unsigned char* verifiable_elem = (const unsigned char *) _verifiable_elem;
+
+    for (size_t counter = 0; counter < elem_size; ++counter)
+    {
+        unsigned char checking_res = mode ? verifiable_elem[counter] == poison_val :
+                                            verifiable_elem[counter] != poison_val ;
+        if (!checking_res)
+        {
+            log_func_end(__PRETTY_FUNCTION__, 0);
+            return 0;
+        }
+    }
+    return 1;
 }
 
-void log_realloc(Stack *stk, const int condition)
+/**
+*   @brief Fills the segment [l, r) of the array "_fillable_elem" by "poison_val".
+*
+*   @param _fillable_elem [in] _fillable_elem - pointer to the first byte of the array to fill
+*   @param      elem_size [in]      elem_size - size (in bytes) of the array's elements
+*   @param           left [in]           left - index of the filling segment beginning
+*   @param          right [in]          right - index of the filling segment ending
+*   @param     poison_val [in]     poison_val - value to fill in
+*
+*   @return nothing
+*/
+
+void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned left,
+                                                              const unsigned right, const unsigned char poison_val)
 {
-    fop();
+    fprintf(LOG_STREAM, "FillPoison(_fillable_elem = %p, elem_size = %u,\n"
+                        "                                                left  = %u,\n"
+                        "                                                right = %u, poison_val = %u)\n\n",
+                                    _fillable_elem,      elem_size,      left,
+                                                                         right,      poison_val);
+    assert(_fillable_elem != nullptr);
 
-    fprintf(log_stream, "StackRealloc(stk = %p, condition = %d)\n\n", stk, condition);
-    fclose( log_stream);
+    char *fillable_elem = (char *) _fillable_elem;
+
+    memset(fillable_elem + elem_size * left, poison_val, elem_size * (right - left));
+
+    log_func_end(__PRETTY_FUNCTION__, 0);
 }
 
-void log_dtor(Stack *stk)
-{
-    fop();
+#ifdef CANARY_PROTECTION
 
-    fprintf(log_stream, "StackDtor(stk = %p)\n\n", stk);
-    fclose( log_stream);
-}
+    /**
+    *   @brief Checks if canary protection of the "stack" is OK. Puts values of canaries in the "left_canary" and
+    *   @brief the "right_canary".
+    *
+    *   @param          stk [in]           stk - pointer to the "stack" to check the canary protection
+    *   @param  left_canary [out]  left_canary - pointer to the  left_canary value. In case of nullptr, value doesn't put
+    *   @param right_canary [out] right_canary - pointer to the right_canary value. In case of nullptr, value doesn't put
+    *
+    *   @return 0 if check failed and 0 else
+    */
 
-/*----------------------------------------------------------*/
-/*----------------------------------------------------------*/
+    unsigned StackCheckCanary(Stack *stk, unsigned *const left_canary, unsigned *const right_canary)
+    {
+        fprintf(LOG_STREAM, "CheckCanary(stk = %p)\n\n",
+                                         stk);
 
+        unsigned  left = *(unsigned *) ((unsigned *)stk->data - 1);
+        unsigned right = *(unsigned *) (stk->data + stk->capacity);
 
-/*-------------------FUNCTION_DECLARATION------------------*/
+        unsigned ret = (left == (unsigned) LEFT_CANARY) && (right == (unsigned) RIGHT_CANARY);
 
-unsigned StackVerify(Stack *stk);
+        if ( left_canary) * left_canary = left ;
+        if (right_canary) *right_canary = right;
 
-unsigned StackPush   (Stack *stk, const Stack_elem push_val);
-unsigned StackPop    (Stack *stk, Stack_elem *const front_val = nullptr);
-unsigned StackDtor   (Stack *stk);
-unsigned StackRealloc(Stack *stk, const int condition);
-
-void make_bit_true(unsigned *const num, const unsigned bit_num);
-
-#ifdef STACK_DUMPING
-
-    void StackDump(Stack *stk, const unsigned err, const char *current_file,
-                                                   const char *current_func,
-                                                   const char *current_line);
-
-    unsigned _StackCtor(Stack *stk, const int capacity, const char *stk_name,
-                                                        const char *stk_func,
-                                                        const char *stk_file, const int stk_line);
+        log_func_end(__PRETTY_FUNCTION__, ret);
+        return ret;
+    }
 
 #endif
-
-/*---------------------------------------------------------*/
 
 #ifdef STACK_DUMPING
 
     #define Stack_assert(stk_ptr, err)                                                          \
-                                                                                                \
-            if (*err = StackVerify(stk_ptr))                                                    \
+            if ((*err = StackVerify(stk_ptr)))                                                    \
             {                                                                                   \
                 StackDump(stk_ptr, *err, __FILE__, __PRETTY_FUNCTION__, __LINE__);              \
                                                                                                 \
                 log_func_end(__PRETTY_FUNCTION__, *err);                                        \
                 return *err;                                                                    \
             }
+#else
+
+    #define Stack_assert(stk_ptr, err)                                                          \
+            if ((*err = StackVerify(stk_ptr)))                                                    \
+            {                                                                                   \
+                log_func_end(__PRETTY_FUNCTION__, *err);                                        \
+                return *err;                                                                    \
+            }
+
+#endif
+
+#ifdef STACK_DUMPING
 
     #define StackCtor(stk_name, capacity)                                                       \
            _StackCtor(stk_name, capacity, #stk_name, __PRETTY_FUNCTION__, __FILE__, __LINE__)
@@ -396,9 +496,13 @@ void make_bit_true(unsigned *const num, const unsigned bit_num);
                                                    const char *current_func,
                                                    int         current_line)
     {
-        log_dump(stk, err, current_file,
-                           current_func,
-                           current_line);
+        fprintf(LOG_STREAM, "StackDump(stk = %p, err = %u,\n"
+                            "                              current_file = \"%s\"\n"
+                            "                              current_func = \"%s\"\n"
+                            "                              current_line = %d)\n\n",
+                                       stk,      err,      current_file,
+                                                           current_func,
+                                                           current_line);
         log_message("MESSAGE_ERRORS:");
 
         int error_numbers = sizeof(error_message) / sizeof(char *);
@@ -409,9 +513,9 @@ void make_bit_true(unsigned *const num, const unsigned bit_num);
                 log_message(error_message[i]);
         }
 
-        log_make_dump(stk, err, current_file,
-                                current_func,
-                                current_line);
+        log_make_dump(stk, current_file,
+                           current_func,
+                           current_line);
 
         log_func_end(__PRETTY_FUNCTION__, 0);
     }
@@ -437,9 +541,9 @@ void make_bit_true(unsigned *const num, const unsigned bit_num);
     *   @note the pointer user need to use &-operator.
     */
 
-    unsigned _StackCtor(Stack *stk, const int capacity, const char *stk_name,
-                                                        const char *stk_func,
-                                                        const char *stk_file, const int stk_line)
+    unsigned _StackCtor(Stack *stk, int capacity, const char *stk_name,
+                                                  const char *stk_func,
+                                                  const char *stk_file, const int stk_line)
     {
         log_dumping_ctor(stk, capacity, stk_name,
                                         stk_func,
@@ -466,32 +570,67 @@ void make_bit_true(unsigned *const num, const unsigned bit_num);
         }
 
         stk->is_Ctor = 1;
+        stk->size    = 0;
 
         stk->info.variable_name = stk_name + 1; // add 1 to skip the '&' character
         stk->info.function_name = stk_func;
         stk->info.file_name     = stk_file;
         stk->info.string_number = stk_line;
 
-        if (capacity)
-        {
-            stk->capacity = capacity;
-            stk->data     = (Stack_elem *) calloc(capacity, sizeof(Stack_elem));
+        capacity = (capacity < 0) ? 0 : capacity;
 
-            if (stk->data == nullptr)
+        #ifdef CANARY_PROTECTION
+
+            unsigned *temp_data_store = (unsigned *) calloc(1, capacity * sizeof(Stack_elem) + 8);
+
+            if (temp_data_store == nullptr)
             {
+                stk->data        = nullptr;
+
                 make_bit_true(&err, MEMORY_LIMIT_EXCEEDED);
                 StackDump(stk, err, __FILE__, __PRETTY_FUNCTION__, __LINE__);
 
                 log_func_end(__PRETTY_FUNCTION__, err);
                 return err;
             }
+            else
+            {
+                stk->data        = (Stack_elem *) (temp_data_store + 1);
+                stk->capacity    = capacity;
 
-            memset(stk->data, POISON_BYTE, sizeof(Stack_elem) * capacity);
-        }
+                *temp_data_store = (unsigned)  LEFT_CANARY;
+                 temp_data_store = (unsigned *) (stk->data + stk->capacity);
+                *temp_data_store = (unsigned) RIGHT_CANARY;
+            }
+
+        #else
+
+            if (capacity)
+            {
+                stk->capacity = capacity;
+
+                stk->data     = (Stack_elem *) calloc(capacity, sizeof(Stack_elem));
+
+                if (stk->data == nullptr)
+                {
+                    make_bit_true(&err, MEMORY_LIMIT_EXCEEDED);
+                    StackDump(stk, err, __FILE__, __PRETTY_FUNCTION__, __LINE__);
+
+                    log_func_end(__PRETTY_FUNCTION__, err);
+                    return err;
+                }
+            }
+        #endif
+
+        if (stk->capacity)
+            FillPoison(stk->data, sizeof(Stack_elem), 0, capacity, (unsigned char) POISON_BYTE);
+
+        Stack_assert(stk, &err);
 
         log_func_end(__PRETTY_FUNCTION__, STACK_OK);
-        return STACK_OK;
+        return (unsigned) STACK_OK;
     }
+
 #endif
 
 /**
@@ -505,7 +644,8 @@ void make_bit_true(unsigned *const num, const unsigned bit_num);
 
 unsigned StackVerify(Stack *stk)
 {
-    log_verify(stk);
+    fprintf(LOG_STREAM, "StackVerify(stk = %p)\n\n",
+                                     stk);
 
     unsigned err = 0;
 
@@ -521,10 +661,10 @@ unsigned StackVerify(Stack *stk)
     if (stk->data == (Stack_elem *) POISON_DATA)
         make_bit_true(&err, ACTIVE_POISON_VALUES);
 
-    if (stk->size < 0)
+    if ((int) stk->size < 0)
         make_bit_true(&err, SIZE_INVALID);
 
-    if (stk->capacity < 0)
+    if ((int) stk->capacity < 0)
         make_bit_true(&err, CAPACITY_INVALID);
 
     if (stk->size > stk->capacity)
@@ -533,28 +673,27 @@ unsigned StackVerify(Stack *stk)
         make_bit_true(&err,  CAPACITY_INVALID);
     }
 
-    if (stk->capacity > 0)
+    if ((int) stk->capacity > 0)
     {
         if (stk->data == nullptr)
             make_bit_true(&err, CAPACITY_INVALID);
 
-        else
+        else if (stk->data != (Stack_elem *) POISON_DATA)
         {
-            unsigned char *data_check = (unsigned char *) stk->data;
-
-            for (int counter = 0; counter < sizeof(Stack_elem) * stk->size; ++counter)
+            for (size_t counter = 0; counter < stk->size; ++counter)
             {
-                if (data_check[counter] == (unsigned char) POISON_BYTE)
+                if (!PoisonCheck(stk->data + counter, sizeof(Stack_elem), (unsigned char) POISON_BYTE,
+                                                                          (unsigned char) 0))
                 {
                     make_bit_true(&err, ACTIVE_POISON_VALUES);
                     break;
                 }
             }
 
-            for (int counter = sizeof(Stack_elem) * stk->size;
-                     counter < sizeof(Stack_elem) * stk->capacity ; ++counter)
+            for (size_t counter = stk->size; counter < stk->capacity; ++counter)
             {
-                if (data_check[counter] != (unsigned char) POISON_BYTE)
+                if (!PoisonCheck(stk->data + counter, sizeof(Stack_elem), (unsigned char) POISON_BYTE,
+                                                                          (unsigned char) 1))
                 {
                     make_bit_true(&err, NON_ACTIVE_NON_POISON_VALUES);
                     break;
@@ -562,6 +701,18 @@ unsigned StackVerify(Stack *stk)
             }
         }
     }
+    if (stk->data == (Stack_elem *) POISON_DATA || stk->data == nullptr)
+    {
+        log_func_end(__PRETTY_FUNCTION__, err);
+        return err;
+    }
+
+    #ifdef CANARY_PROTECTION
+
+        if (!StackCheckCanary(stk))
+            make_bit_true(&err, CANARY_PROTECTION_FAILED);
+
+    #endif
 
     log_func_end(__PRETTY_FUNCTION__, err);
     return err;
@@ -570,14 +721,16 @@ unsigned StackVerify(Stack *stk)
 /**
 *   @brief Makes the bit of the unsigned int true.
 *
-*   @param     num [in][out] - pointer to the unsigned int
-*   @param bit_num [in]      - number of the bit to make true
+*   @param     num [in][out] num - pointer to the unsigned int
+*   @param bit_num [in]  bit_num - number of the bit to make true
 *
 *   @return nothing
 */
 
 void make_bit_true(unsigned *const num, const unsigned bit_num)
 {
+    assert (num);
+
     *num = (*num) | (1 << bit_num);
 }
 
@@ -638,7 +791,8 @@ unsigned StackPush(Stack *stk, const Stack_elem push_val)
 
 unsigned StackPop(Stack *stk, Stack_elem *const front_val)
 {
-    log_pop(stk, front_val);
+    fprintf(LOG_STREAM, "StackPop(stk = %p, front_val = %p)\n\n",
+                                  stk,      front_val);
 
     unsigned err = 0;
     Stack_assert(stk, &err);
@@ -662,7 +816,9 @@ unsigned StackPop(Stack *stk, Stack_elem *const front_val)
     if (front_val != nullptr)
         *front_val = stk->data[stk->size];
 
-    memset((char *) stk->data + sizeof(Stack_elem) * stk->size, POISON_BYTE, sizeof(Stack_elem));
+    FillPoison(stk->data, sizeof(Stack_elem), stk->size, stk->size + 1, (unsigned char) POISON_BYTE);
+
+    Stack_assert(stk, &err);
 
     err = StackRealloc(stk, 0);
 
@@ -685,70 +841,66 @@ unsigned StackPop(Stack *stk, Stack_elem *const front_val)
 
 unsigned StackRealloc(Stack *stk, const int condition)
 {
-    log_realloc(stk, condition);
+    fprintf(LOG_STREAM, "StackRealloc(stk = %p, condition = %d)\n\n",
+                                      stk,      condition);
 
     unsigned err = 0;
     Stack_assert(stk, &err);
 
+    int future_capacity = 0;
+
     if (condition)
     {
-        int future_capacity = 0;
-
-        if (stk->capacity == 0)
-            future_capacity = 4; //default elementary capacity
-        else
-            future_capacity = 2 * stk->capacity;
-
-        stk->data = (Stack_elem *) realloc(stk->data, sizeof(Stack_elem) * future_capacity);
-
-        if (stk->data == nullptr)
-        {
-            make_bit_true(&err, MEMORY_LIMIT_EXCEEDED);
-
-            #ifdef STACK_DUMPING
-
-                StackDump(stk, err, __FILE__, __PRETTY_FUNCTION__, __LINE__);
-
-            #endif
-
-            log_func_end(__PRETTY_FUNCTION__, err);
-            return err;
-        }
-
-        memset((char *)stk->data + sizeof(Stack_elem) * stk->size, POISON_BYTE, sizeof(Stack_elem) * (future_capacity - stk->size));
-        stk->capacity = future_capacity;
-
-        Stack_assert(stk, &err);
-
-        log_func_end(__PRETTY_FUNCTION__, STACK_OK);
-        return STACK_OK;
+            future_capacity = 2 *  stk->capacity;
+        if (future_capacity < 4) future_capacity = 4; //default elementary capacity
     }
-
-    //if (!condition)
-    if ((stk->size != 0) && (4 * stk->size <= stk->capacity))
+    else
     {
-        int future_capacity = 2 * stk->size;
-
-        stk->data = (Stack_elem *) realloc(stk->data, sizeof(Stack_elem) * future_capacity);
-
-        if (stk->data == nullptr)
-        {
-            make_bit_true(&err, MEMORY_LIMIT_EXCEEDED);
-
-            #ifdef STACK_DUMPING
-
-                StackDump(stk, err, __FILE__, __PRETTY_FUNCTION__, __LINE__);
-
-            #endif
-
-            log_func_end(__PRETTY_FUNCTION__, err);
-            return err;
-        }
-
-        stk->capacity = future_capacity;
-
-        Stack_assert(stk, &err);
+        if ((stk->size != 0) && (stk->capacity >= 4 * stk->size)) future_capacity = 2 * stk->size;
     }
+
+    #ifdef CANARY_PROTECTION
+
+        int *temp_data_store = (int *) realloc((unsigned *) (stk->data) - 1, 8 + sizeof(Stack_elem) * future_capacity);
+
+    #else
+
+        Stack_elem *temp_data_store = (Stack_elem *) realloc(stk->data, sizeof(Stack_elem) * future_capacity);
+
+    #endif
+
+    if (temp_data_store == nullptr)
+    {
+        make_bit_true(&err, MEMORY_LIMIT_EXCEEDED);
+
+        #ifdef STACK_DUMPING
+
+            StackDump(stk, err, __FILE__, __PRETTY_FUNCTION__, __LINE__);
+
+        #endif
+
+        log_func_end(__PRETTY_FUNCTION__, err);
+        return err;
+    }
+
+
+    #ifdef CANARY_PROTECTION
+
+        stk->data = (Stack_elem *) (temp_data_store + 1);
+
+        *(int *) (stk->data + stk->capacity) = RIGHT_CANARY;
+
+    #else
+
+        stk->data = temp_data_store;
+
+    #endif
+
+    stk->capacity = future_capacity;
+
+    FillPoison(stk->data, sizeof(Stack_elem), stk->size, stk->capacity, (unsigned char) POISON_BYTE);
+
+    Stack_assert(stk, &err);
 
     log_func_end(__PRETTY_FUNCTION__, STACK_OK);
     return STACK_OK;
@@ -765,14 +917,24 @@ unsigned StackRealloc(Stack *stk, const int condition)
 
 unsigned StackDtor(Stack *stk)
 {
-    log_dtor(stk);
+    fprintf(LOG_STREAM, "StackDtor(stk = %p)\n\n",
+                                   stk);
 
     unsigned err = 0;
     Stack_assert(stk, &err);
 
     if (stk->data != nullptr)
     {
-        free(stk->data);
+        #ifdef CANARY_PROTECTION
+
+            free((unsigned *) stk->data - 1);
+
+        #else
+
+            free(stk->data);
+
+        #endif
+
         stk->data = (Stack_elem *) POISON_DATA;
     }
 

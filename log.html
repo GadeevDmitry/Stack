@@ -1,0 +1,292 @@
+<pre>
+"log.html" OPENING IS OK
+
+(dumping)_StackCtor(stk = 0064FEDC, capacity = 0,
+                                             stk_name = "&testing"
+                                             stk_func = "int main()"
+                                             stk_file = "test1.cpp"
+                                             stk_line = 968)
+
+StackVerify(stk = 0064FEDC)
+
+CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+unsigned int StackVerify(Stack*) returns 0
+
+unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 0
+
+StackDtor(stk = 0064FEDC)
+
+StackVerify(stk = 0064FEDC)
+
+CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+unsigned int StackVerify(Stack*) returns 0
+
+unsigned int StackDtor(Stack*) returns 0
+
+StackDtor(stk = 0064FEDC)
+
+StackVerify(stk = 0064FEDC)
+
+unsigned int StackVerify(Stack*) returns 132
+
+StackDump(stk = 0064FEDC, err = 132,
+                              current_file = "test1.cpp"
+                              current_func = "unsigned int StackDtor(Stack*)"
+                              current_line = 930)
+
+<font color=red> MESSAGE_ERRORS: </font>
+<font color=red> stack is not constructed </font>
+<font color=red> active variables are poisoned </font>
+
+<font color=blue> ERROR occurred at:
+FILE: test1.cpp
+FUNC: unsigned int StackDtor(Stack*)
+LINE: 930 </font>
+
+<font color=blue> Stack[0064FEDC] "POISON_NAME" was constructed at
+file: "POISON_NAME"
+func: "POISON_NAME"
+line: "0"
+{
+size     = 4294967295
+capacity = 4294967295
+</font><font color=blue>data </font>[<font color=yellow>POISON_DATA</font>]
+
+void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
+
+unsigned int StackDtor(Stack*) returns 132
+
+(dumping)_StackCtor(stk = 0064FEDC, capacity = 0,
+                                             stk_name = "&testing"
+                                             stk_func = "int main()"
+                                             stk_file = "test1.cpp"
+                                             stk_line = 973)
+
+StackVerify(stk = 0064FEDC)
+
+CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+unsigned int StackVerify(Stack*) returns 0
+
+unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 0
+
+(dumping)_StackCtor(stk = 0064FEDC, capacity = 0,
+                                             stk_name = "&testing"
+                                             stk_func = "int main()"
+                                             stk_file = "test1.cpp"
+                                             stk_line = 974)
+
+StackDump(stk = 0064FEDC, err = 8,
+                              current_file = "test1.cpp"
+                              current_func = "unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int)"
+                              current_line = 568)
+
+<font color=red> MESSAGE_ERRORS: </font>
+<font color=red> stack is already constructed </font>
+
+<font color=blue> ERROR occurred at:
+FILE: test1.cpp
+FUNC: unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int)
+LINE: 568 </font>
+
+<font color=blue> Stack[0064FEDC] "testing" was constructed at
+file: "test1.cpp"
+func: "int main()"
+line: "973"
+{
+size     = 0
+capacity = 0
+</font>CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+<font color=blue> left_canary  = 3131961357 </font> <font color=green> (OK) </font>
+<font color=blue> right_canary = 3735928559 </font> <font color=green> (OK) </font>
+<font color=blue>data[00C42F24]
+	{
+</font>	}
+
+void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
+
+unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 8
+
+StackPush(stk = 0064FEDC, push_val = <font color=blue>44</font><font color=blue>1</font><font color=blue>0</font><font color=blue>0</font>)
+
+StackVerify(stk = 0064FEDC)
+
+CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+unsigned int StackVerify(Stack*) returns 0
+
+StackRealloc(stk = 0064FEDC, condition = 1)
+
+StackVerify(stk = 0064FEDC)
+
+CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+
+unsigned int StackVerify(Stack*) returns 0
+
+FillPoison(_fillable_elem = 00C40C64, elem_size = 4,
+                                                left  = 0,
+                                                right = 4, poison_val = 167)
+
+void FillPoison(void*, size_t, unsigned int, unsigned int, unsigned char) returns 0
+
+StackVerify(stk = 0064FEDC)
+
+CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 0
+
+unsigned int StackVerify(Stack*) returns 1024
+
+StackDump(stk = 0064FEDC, err = 1024,
+                              current_file = "test1.cpp"
+                              current_func = "unsigned int StackRealloc(Stack*, int)"
+                              current_line = 909)
+
+<font color=red> MESSAGE_ERRORS: </font>
+<font color=red> canary protection failed </font>
+
+<font color=blue> ERROR occurred at:
+FILE: test1.cpp
+FUNC: unsigned int StackRealloc(Stack*, int)
+LINE: 909 </font>
+
+<font color=blue> Stack[0064FEDC] "testing" was constructed at
+file: "test1.cpp"
+func: "int main()"
+line: "973"
+{
+size     = 0
+capacity = 4
+</font>CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 0
+
+<font color=blue> left_canary  = 3131961357 </font> <font color=green> (OK) </font>
+<font color=blue> right_canary = 1701080899 </font> <font color=red> (ERROR) </font>
+<font color=blue>data[00C40C64]
+	{
+</font>	 <font color=blue>[0] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	 <font color=blue>[1] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	 <font color=blue>[2] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	 <font color=blue>[3] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	}
+
+void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
+
+unsigned int StackRealloc(Stack*, int) returns 1024
+
+unsigned int StackPush(Stack*, Stack_elem) returns 1024
+
+StackPop(stk = 0064FEDC, front_val = 0064FEFC)
+
+StackVerify(stk = 0064FEDC)
+
+CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 0
+
+unsigned int StackVerify(Stack*) returns 1024
+
+StackDump(stk = 0064FEDC, err = 1024,
+                              current_file = "test1.cpp"
+                              current_func = "unsigned int StackPop(Stack*, Stack_elem*)"
+                              current_line = 800)
+
+<font color=red> MESSAGE_ERRORS: </font>
+<font color=red> canary protection failed </font>
+
+<font color=blue> ERROR occurred at:
+FILE: test1.cpp
+FUNC: unsigned int StackPop(Stack*, Stack_elem*)
+LINE: 800 </font>
+
+<font color=blue> Stack[0064FEDC] "testing" was constructed at
+file: "test1.cpp"
+func: "int main()"
+line: "973"
+{
+size     = 0
+capacity = 4
+</font>CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 0
+
+<font color=blue> left_canary  = 3131961357 </font> <font color=green> (OK) </font>
+<font color=blue> right_canary = 1701080899 </font> <font color=red> (ERROR) </font>
+<font color=blue>data[00C40C64]
+	{
+</font>	 <font color=blue>[0] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	 <font color=blue>[1] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	 <font color=blue>[2] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	 <font color=blue>[3] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	}
+
+void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
+
+unsigned int StackPop(Stack*, Stack_elem*) returns 1024
+
+StackPop(stk = 0064FEDC, front_val = 0064FEFC)
+
+StackVerify(stk = 0064FEDC)
+
+CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 0
+
+unsigned int StackVerify(Stack*) returns 1024
+
+StackDump(stk = 0064FEDC, err = 1024,
+                              current_file = "test1.cpp"
+                              current_func = "unsigned int StackPop(Stack*, Stack_elem*)"
+                              current_line = 800)
+
+<font color=red> MESSAGE_ERRORS: </font>
+<font color=red> canary protection failed </font>
+
+<font color=blue> ERROR occurred at:
+FILE: test1.cpp
+FUNC: unsigned int StackPop(Stack*, Stack_elem*)
+LINE: 800 </font>
+
+<font color=blue> Stack[0064FEDC] "testing" was constructed at
+file: "test1.cpp"
+func: "int main()"
+line: "973"
+{
+size     = 0
+capacity = 4
+</font>CheckCanary(stk = 0064FEDC)
+
+unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 0
+
+<font color=blue> left_canary  = 3131961357 </font> <font color=green> (OK) </font>
+<font color=blue> right_canary = 1701080899 </font> <font color=red> (ERROR) </font>
+<font color=blue>data[00C40C64]
+	{
+</font>	 <font color=blue>[0] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	 <font color=blue>[1] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	 <font color=blue>[2] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	 <font color=blue>[3] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=yellow> (POISON) </font>
+	}
+
+void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
+
+unsigned int StackPop(Stack*, Stack_elem*) returns 1024
+
+"log.html" CLOSING IS OK
+
