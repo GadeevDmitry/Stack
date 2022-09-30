@@ -23,12 +23,12 @@
     *   @param strings_number - number of the   string where the variable declareted
     */
 
-    typedef struct _StackDeclaration
+    typedef struct _VarDeclaration
     {
         const char *variable_name, *function_name, *file_name;
         int string_number;
 
-    } StackDeclaration;
+    } VarDeclaration;
 
 #endif
 
@@ -64,7 +64,7 @@ typedef struct _Stack
 
     #ifdef STACK_DUMPING
 
-        StackDeclaration info;
+        VarDeclaration info;
 
     #endif
 
@@ -79,16 +79,16 @@ typedef struct _Stack
 *   @param STACK_ALREADY_CTOR - Stack is already constructed
 *   @param STACK_EMPTY        - Stack is empty
 *
-*   @param CAPACITY_INVALID - Stack's capacity is invalid(lower than zero or less then     size)
-*   @param     SIZE_INVALID - Stack's     size is invalid(lower than zero or more than capacity)
+*   @param CAPACITY_INVALID   - Stack's capacity is invalid(lower than zero or less then     size)
+*   @param SIZE_INVALID       - Stack's     size is invalid(lower than zero or more than capacity)
 *
-*   @param         ACTIVE_POISON_VALUES - poison-values   are active
+*   @param ACTIVE_POISON_VALUES         - poison-values   are active
 *   @param NON_ACTIVE_NON_POISON_VALUES - refuse elements are non-poison
 *
-*   @param MEMORY_LIMIT_EXCEEDED - memory allocation query is failed
+*   @param MEMORY_LIMIT_EXCEEDED        - memory allocation query is failed
 *
-*   @param CANARY_PROTECTION_FAILED - canary protection is failed
-*   @param   HASH_PROTECTION_FAILED - hash   protection is failed
+*   @param CANARY_PROTECTION_FAILED     - canary protection is failed
+*   @param HASH_PROTECTION_FAILED       - hash   protection is failed
 */
 
 typedef enum _StackError
@@ -100,15 +100,15 @@ typedef enum _StackError
     STACK_EMPTY                  = 4,
 
     CAPACITY_INVALID             = 5,
-        SIZE_INVALID             = 6,
+    SIZE_INVALID                 = 6,
 
-            ACTIVE_POISON_VALUES = 7,
+    ACTIVE_POISON_VALUES         = 7,
     NON_ACTIVE_NON_POISON_VALUES = 8,
 
     MEMORY_LIMIT_EXCEEDED        = 9,
 
     CANARY_PROTECTION_FAILED     = 10,
-      HASH_PROTECTION_FAILED     = 11
+    HASH_PROTECTION_FAILED       = 11
 
 } StackError;
 
@@ -158,17 +158,17 @@ typedef enum _Poison
 /**
 *   @brief The enum contains any protection constants.
 *
-*   @param  LEFT_CANARY - value for the  left canary protection
+*   @param LEFT_CANARY  - value for the  left canary protection
 *   @param RIGHT_CANARY - value for the right canary protection
 *
-*   @param  HASH_START  - begining value of the hash
+*   @param HASH_START   - begining value of the hash
 */
 
 typedef enum _Protection
 {
     LEFT_CANARY  = 0xBAADF00D,
     RIGHT_CANARY = 0xDEADBEEF,
-     HASH_START  = 0xFEEDFACE
+    HASH_START   = 0xFEEDFACE
 
 } Protection;
 
@@ -213,190 +213,27 @@ void make_bit_true(unsigned *const num, const unsigned bit_num);
 
 #endif
 
-/*--------------------------------------------------LOG_FUNCTIONS----------------------------------------------------*/
+/*--------------------------------------------------LOG_FUNCTIONS-----------------------------------------------------*/
 
-const char *LOG_FILE_NAME = "log.html";
-FILE       *LOG_STREAM    = nullptr;
+// User must include the "logs.h". It is in the same directory as the "stack.h"
 
-/**
-*   @brief Opens log-file. Ckecks if opening is OK and in this case prints message in the log-file.
-*
-*   @return 1 if checking is OK. Does abort() if an ERROR found.
-*/
+/*---------------------------------------------LOG_FUNCTIONS_DECLARATION----------------------------------------------*/
 
-int OPEN_LOG_STREAM()
-{
-    LOG_STREAM = fopen(LOG_FILE_NAME, "w");
-    assert( LOG_STREAM != nullptr);
+extern FILE *LOG_STREAM;
 
-    setvbuf(LOG_STREAM,   nullptr, _IONBF, 0);
-
-    fprintf(LOG_STREAM, "<pre>\n""\"%s\" OPENING IS OK\n\n", LOG_FILE_NAME);
-    return 1;
-}
-
-/**
-*   @brief Closes log-file. Called using atexit().
-*
-*   @return 1 if closing is OK. Does abort() if an ERROR found.
-*/
-
-void CLOSE_LOG_STREAM()
-{
-    assert(LOG_STREAM != nullptr);
-
-    fprintf(LOG_STREAM, "\"%s\" CLOSING IS OK\n\n", LOG_FILE_NAME);
-    fclose( LOG_STREAM);
-}
-
-int  _OPEN_LOG_STREAM = OPEN_LOG_STREAM();
-int _CLOSE_LOG_STREAM = atexit(CLOSE_LOG_STREAM);
-
-void log_message(const char *message)
-{
-    fprintf(LOG_STREAM, "<font color=red> %s </font>\n", message);
-}
-
-void log_func_end(const char *function_name, unsigned err)
-{
-    fprintf(LOG_STREAM, "%s returns %d\n\n", function_name, err);
-}
-
-void log_stack_elem(const Stack_elem *var)
-{
-    unsigned char current_byte_value = 0;
-    unsigned char is_poison = 1;
-
-    for (size_t i = 0; i < sizeof(Stack_elem); ++i)
-    {
-        current_byte_value = *((const unsigned char *) var + i);
-
-        if (current_byte_value != (unsigned char) POISON_BYTE)
-            is_poison = 0;
-
-        fprintf(LOG_STREAM, "<font color=blue>%u</font>", current_byte_value);
-    }
-
-    if (is_poison)
-        fprintf(LOG_STREAM, " <font color=yellow> (POISON) </font>");
-}
-
-void log_make_dump(Stack *stk, const char *current_file,
-                               const char *current_func,
-                               int         current_line)
-{
-    fprintf(LOG_STREAM, "\n<font color=blue> ERROR occurred at:\n"
-                        "FILE: %s\n"
-                        "FUNC: %s\n"
-                        "LINE: %d </font>\n\n", current_file, current_func, current_line);
-
-    if (stk == nullptr)
-    {
-        fprintf(LOG_STREAM, "Stack[nullptr]\n");
-        return;
-    }
-
-    if (stk->info.variable_name == nullptr) stk->info.variable_name = "nullptr";
-    if (stk->info.file_name     == nullptr) stk->info.file_name     = "nullptr";
-    if (stk->info.function_name == nullptr) stk->info.function_name = "nullptr";
-
-    if (stk->info.variable_name == (const char *) POISON_NAME) stk->info.variable_name = "POISON_NAME";
-    if (stk->info.file_name     == (const char *) POISON_NAME) stk->info.file_name     = "POISON_NAME";
-    if (stk->info.function_name == (const char *) POISON_NAME) stk->info.function_name = "POISON_NAME";
-
-    fprintf(LOG_STREAM, "<font color=blue> Stack[%p] \"%s\" was constructed at\n"
-                            "file: \"%s\"\n"
-                            "func: \"%s\"\n"
-                            "line: \"%d\"\n"
-                            "{\n"
-                            "size     = %u\n"
-                            "capacity = %u\n</font>", stk, stk->info.variable_name,
-                                               stk->info.file_name, stk->info.function_name, stk->info.string_number,
-                                               stk->size, stk->capacity);
-    if (stk->data == nullptr)
-    {
-        fprintf(LOG_STREAM, "<font color=blue>data[nullptr]\n\n </font>");
-        return;
-    }
-
-    if (stk->data == (Stack_elem *) POISON_DATA)
-    {
-        fprintf(LOG_STREAM, "<font color=blue>data </font>[<font color=lightgreen>POISON_DATA</font>]\n\n");
-        return;
-    }
-
-    #ifdef CANARY_PROTECTION
-
-        unsigned left = 0, right = 0;
-
-        StackCheckCanary(stk, &left, &right);
-
-        (left  ==  LEFT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue>  left_canary = %16u </font> <font color=green> (OK) </font>\n",     left) :
-                                  fprintf(LOG_STREAM, "<font color=blue>  left_canary = %16u </font> <font color=red> (ERROR) </font>\n",    left) ;
-
-        (right == RIGHT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue> right_canary = %16u </font> <font color=green> (OK) </font>\n",    right) :
-                                  fprintf(LOG_STREAM, "<font color=blue> right_canary = %16u </font> <font color=red> (ERROR) </font>\n",   right) ;
-
-    #endif
-
-    #ifdef HASH_PROTECTION
-
-        unsigned good_hash = CheckHash(stk, stk->capacity * sizeof(Stack_elem), stk->hash_val);
-
-        if (good_hash)
-            fprintf(LOG_STREAM, "<font color=blue> hash_val = %llu </font> <font color=green>  (OK) </font>\n", stk->hash_val);
-        else
-            fprintf(LOG_STREAM, "<font color=blue> hash_val = %llu </font> <font color=red> (ERROR) </font>\n", stk->hash_val);
-
-    #endif
-
-    fprintf(LOG_STREAM, "<font color=blue>data[%p]\n\t{\n</font>", stk->data);
-
-    for (size_t data_counter = 0; data_counter < stk->capacity; ++data_counter)
-    {
-        putc('\t', LOG_STREAM);
-
-        (data_counter < stk->size) ? putc('*', LOG_STREAM) : putc(' ', LOG_STREAM);
-
-        fprintf(LOG_STREAM, "<font color=blue>[%d] = </font>", data_counter);
-
-        log_stack_elem(stk->data + data_counter);
-
-        putc('\n', LOG_STREAM);
-    }
-    fprintf(LOG_STREAM, "\t}\n\n");
-}
-
+void log_message(const char *message);
+void log_func_end(const char *function_name, unsigned err);
+void log_stack_elem(const Stack_elem *var);
 void log_dumping_ctor(Stack *stk, const int capacity, const char *stk_name,
                                                       const char *stk_func,
-                                                      const char *stk_file, const int stk_line)
-{
-    if (stk_name == nullptr) stk_name = "nullptr";
-    if (stk_func == nullptr) stk_func = "nullptr";
-    if (stk_file == nullptr) stk_file = "nullptr";
+                                                      const char *stk_file, const int stk_line);
+void log_make_dump(Stack *stk, const char *current_file,
+                               const char *current_func,
+                               int         current_line);
 
-    fprintf(LOG_STREAM, "(dumping)_StackCtor(stk = %p, capacity = %d,\n"
-                        "                                             stk_name = \"%s\"\n"
-                        "                                             stk_func = \"%s\"\n"
-                        "                                             stk_file = \"%s\"\n"
-                        "                                             stk_line = %d)\n\n",
-                                             stk,      capacity,      stk_name,
-                                                                      stk_func,
-                                                                      stk_file,
-                                                                      stk_line);
-}
-
-void log_push(Stack *stk, const Stack_elem push_val)
-{
-    fprintf(LOG_STREAM, "StackPush(stk = %p, push_val = ", stk);
-
-    log_stack_elem(&push_val);
-
-    fprintf(LOG_STREAM, ")\n\n");
-}
+void log_push(Stack *stk, const Stack_elem push_val);
 
 /*--------------------------------------------------------------------------------------------------------------------*/
-
 /**
 *   @brief Works in 2 modes.
 *   @brief Checks if the variable is filled by "poison_val"     in the first  mode.
@@ -520,7 +357,7 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
             hash_ret = ((hash_ret << 5) + hash_ret) + data_store[counter];
         }
 
-        fprintf(LOG_STREAM,"get_hash(void*, unsigned int) returns %llu\n\n", hash_ret);
+        fprintf(LOG_STREAM,"get_hash(void*, unsigned int) returns %llx\n\n", hash_ret);
         return hash_ret;
     }
 
@@ -536,7 +373,7 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
 
     unsigned CheckHash(void *_data_store, const size_t elem_size, const unsigned long long hash_val)
     {
-        fprintf(LOG_STREAM, "CheckHash(_data_store = %p, elem_size = %u, hash_val = %llu)\n\n",
+        fprintf(LOG_STREAM, "CheckHash(_data_store = %p, elem_size = %u, hash_val = %llx)\n\n",
                                        _data_store,      elem_size,      hash_val);
 
         assert(_data_store != nullptr);
@@ -700,6 +537,7 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
                  temp_data_store = (unsigned *) (stk->data + stk->capacity);
                 *temp_data_store = (unsigned) RIGHT_CANARY;
             }
+
         #else
 
             if (capacity)
@@ -986,6 +824,9 @@ unsigned StackRealloc(Stack *stk, const int condition)
     {
         if ((stk->size != 0) && (stk->capacity >= 4 * stk->size)) future_capacity = 2 * stk->size;
     }
+
+    if (future_capacity == 0)
+        return STACK_OK;
 
     #ifdef CANARY_PROTECTION
 
