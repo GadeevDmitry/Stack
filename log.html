@@ -1,380 +1,198 @@
 <pre>
 "log.html" OPENING IS OK
 
-(dumping)_StackCtor(stk = 0064FED0, capacity = 0,
-                                             stk_name = "&test"
-                                             stk_func = "int main()"
-                                             stk_file = "test2.cpp"
-                                             stk_line = 12)
+<font color=>(dumping)_StackCtor(stk = 0x7fff0b4c2760, capacity = 0,
+stk_name = "&stk"
+stk_func = "int main()"
+stk_file = "test1.cpp"
+stk_line = 11)
 
-get_hash(_data_store = 00B32F2C, elem_size = 0)
+	</font>StackVerify(stk = 0x7fff0b4c2760)
 
-get_hash(void*, unsigned int) returns feedface
+	<font color=>unsigned int StackVerify(Stack*) returns 0
 
-StackVerify(stk = 0064FED0)
+	</font><font color=>unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 0
 
-CheckCanary(stk = 0064FED0)
+</font><font color=>(dumping)_StackCtor(stk = 0x7fff0b4c2760, capacity = 0,
+stk_name = "&stk"
+stk_func = "int main()"
+stk_file = "test1.cpp"
+stk_line = 12)
 
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+	</font>StackDump(stk = 0x7fff0b4c2760, err = 8,
+	                              current_file = "src/stack.h"
+	                              current_func = "unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int)"
+	                              current_line = 738)
 
-CheckHash(_data_store = 00B32F2C, elem_size = 0, hash_val = feedface)
+	<font color=DarkRed>MESSAGE_ERRORS
+		</font><font color=DarkRed>stack is already constructed</font><font color=MediumBlue>
+		ERROR occurred at:
+             		FILE: src/stack.h
+             		FUNC: unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int)
+             		LINE: 738
 
-get_hash(_data_store = 00B32F2C, elem_size = 0)
+		</font><font color=MediumBlue>Stack[0x7fff0b4c2760] "stk" was constructed at
+		file: "test1.cpp"
+		func: "int main()"
+		line: "11"
+		{
+			size     = 0
+			capacity = 0
+		</font><font color=MediumBlue>	left_canary  =       3131961357</font><font color=LimeGreen>(OK)
+		</font><font color=MediumBlue>	right_canary =       3735928559</font><font color=LimeGreen>(OK)
+		</font><font color=MediumBlue>	hash_val = feedface</font><font color=LimeGreen>(OK)
+		</font><font color=MediumBlue>	data[0x563929fad4f4]
+			{
+		</font><font color=MediumBlue>	}
+		}
+		</font><font color=>void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
 
-get_hash(void*, unsigned int) returns feedface
+	</font><font color=>unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 8
 
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+</font>StackDtor(stk = 0x7fff0b4c2760)
 
-unsigned int StackVerify(Stack*) returns 0
+StackVerify(stk = 0x7fff0b4c2760)
 
-unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 0
+	<font color=>unsigned int StackVerify(Stack*) returns 0
 
-StackDtor(stk = 0064FED0)
+	</font><font color=>unsigned int StackDtor(Stack*) returns 0
 
-StackVerify(stk = 0064FED0)
+</font>StackDtor(stk = 0x7fff0b4c2760)
 
-CheckCanary(stk = 0064FED0)
+StackVerify(stk = 0x7fff0b4c2760)
 
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+	<font color=>unsigned int StackVerify(Stack*) returns 228
 
-CheckHash(_data_store = 00B32F2C, elem_size = 0, hash_val = feedface)
+	</font>StackDump(stk = 0x7fff0b4c2760, err = 228,
+	                              current_file = "src/stack.h"
+	                              current_func = "unsigned int StackDtor(Stack*)"
+	                              current_line = 1140)
 
-get_hash(_data_store = 00B32F2C, elem_size = 0)
+	<font color=DarkRed>MESSAGE_ERRORS
+		</font><font color=DarkRed>stack is not constructed</font><font color=DarkRed>capacity invalid</font><font color=DarkRed>size invalid</font><font color=DarkRed>active variables are poisoned</font><font color=MediumBlue>
+		ERROR occurred at:
+             		FILE: src/stack.h
+             		FUNC: unsigned int StackDtor(Stack*)
+             		LINE: 1140
 
-get_hash(void*, unsigned int) returns feedface
+		</font><font color=MediumBlue>Stack[0x7fff0b4c2760] "POISON_NAME" was constructed at
+		file: "POISON_NAME"
+		func: "POISON_NAME"
+		line: "0"
+		{
+			size     = 4294967295
+			capacity = 4294967295
+		</font><font color=MediumBlue>	data</font><font color=Olive>[POISON_DATA]</font><font color=MediumBlue>
+		}
+		</font><font color=>void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
 
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+	</font><font color=>unsigned int StackDtor(Stack*) returns 228
 
-unsigned int StackVerify(Stack*) returns 0
+</font><font color=>(dumping)_StackCtor(stk = 0x7fff0b4c2760, capacity = 0,
+stk_name = "&stk"
+stk_func = "int main()"
+stk_file = "test1.cpp"
+stk_line = 17)
 
-unsigned int StackDtor(Stack*) returns 0
+	</font>StackVerify(stk = 0x7fff0b4c2760)
 
-StackDtor(stk = 0064FED0)
+	<font color=>unsigned int StackVerify(Stack*) returns 0
 
-StackVerify(stk = 0064FED0)
+	</font><font color=>unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 0
 
-unsigned int StackVerify(Stack*) returns 228
+</font>StackPush(stk = 0x7fff0b4c2760, push_val = <font color=MediumBlue>20</font><font color=MediumBlue>6</font><font color=MediumBlue>0</font><font color=MediumBlue>0</font>)
 
-StackDump(stk = 0064FED0, err = 228,
-                              current_file = "src/stack.h"
-                              current_func = "unsigned int StackDtor(Stack*)"
-                              current_line = 899)
+	StackVerify(stk = 0x7fff0b4c2760)
 
-<font color=red> MESSAGE_ERRORS: </font>
-<font color=red> stack is not constructed </font>
-<font color=red> capacity invalid </font>
-<font color=red> size invalid </font>
-<font color=red> active variables are poisoned </font>
+	<font color=>unsigned int StackVerify(Stack*) returns 0
 
-<font color=blue> ERROR occurred at:
-FILE: src/stack.h
-FUNC: unsigned int StackDtor(Stack*)
-LINE: 899 </font>
+	</font>StackRealloc(stk = 0x7fff0b4c2760, condition = 1)
 
-<font color=blue> Stack[0064FED0] "POISON_NAME" was constructed at
-file: "POISON_NAME"
-func: "POISON_NAME"
-line: "0"
-{
-size     = 4294967295
-capacity = 4294967295
-</font><font color=blue>data </font>[<font color=lightgreen>POISON_DATA</font>]
+	StackVerify(stk = 0x7fff0b4c2760)
 
-void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
+		<font color=>unsigned int StackVerify(Stack*) returns 0
 
-unsigned int StackDtor(Stack*) returns 228
+		</font>FillPoison(_fillable_elem = 0x563929fad514, elem_size = 4,
+		                                                left  = 0,
+		                                                right = 4, poison_val = 167)
 
-(dumping)_StackCtor(stk = 0064FED0, capacity = 0,
-                                             stk_name = "&test"
-                                             stk_func = "int main()"
-                                             stk_file = "test2.cpp"
-                                             stk_line = 17)
+		<font color=>void FillPoison(void*, size_t, unsigned int, unsigned int, unsigned char) returns 0
 
-get_hash(_data_store = 00B32F2C, elem_size = 0)
+		</font>StackVerify(stk = 0x7fff0b4c2760)
 
-get_hash(void*, unsigned int) returns feedface
+		<font color=>unsigned int StackVerify(Stack*) returns 0
 
-StackVerify(stk = 0064FED0)
+		</font><font color=>unsigned int StackRealloc(Stack*, int) returns 0
 
-CheckCanary(stk = 0064FED0)
+	</font>StackVerify(stk = 0x7fff0b4c2760)
 
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+	<font color=>unsigned int StackVerify(Stack*) returns 0
 
-CheckHash(_data_store = 00B32F2C, elem_size = 0, hash_val = feedface)
+	</font><font color=>unsigned int StackPush(Stack*, Stack_elem) returns 0
 
-get_hash(_data_store = 00B32F2C, elem_size = 0)
+</font>StackPop(stk = 0x7fff0b4c2760, front_val = 0x7fff0b4c275c)
 
-get_hash(void*, unsigned int) returns feedface
+StackVerify(stk = 0x7fff0b4c2760)
 
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+	<font color=>unsigned int StackVerify(Stack*) returns 0
 
-unsigned int StackVerify(Stack*) returns 0
+	</font>FillPoison(_fillable_elem = 0x563929fad514, elem_size = 4,
+	                                                left  = 0,
+	                                                right = 1, poison_val = 167)
 
-unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 0
+	<font color=>void FillPoison(void*, size_t, unsigned int, unsigned int, unsigned char) returns 0
 
-(dumping)_StackCtor(stk = 0064FED0, capacity = 0,
-                                             stk_name = "&test"
-                                             stk_func = "int main()"
-                                             stk_file = "test2.cpp"
-                                             stk_line = 18)
+	</font>StackVerify(stk = 0x7fff0b4c2760)
 
-StackDump(stk = 0064FED0, err = 8,
-                              current_file = "src/stack.h"
-                              current_func = "unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int)"
-                              current_line = 501)
+	<font color=>unsigned int StackVerify(Stack*) returns 0
 
-<font color=red> MESSAGE_ERRORS: </font>
-<font color=red> stack is already constructed </font>
+	</font>StackRealloc(stk = 0x7fff0b4c2760, condition = 0)
 
-<font color=blue> ERROR occurred at:
-FILE: src/stack.h
-FUNC: unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int)
-LINE: 501 </font>
+	StackVerify(stk = 0x7fff0b4c2760)
 
-<font color=blue> Stack[0064FED0] "test" was constructed at
-file: "test2.cpp"
-func: "int main()"
-line: "17"
-{
-size     = 0
-capacity = 0
-</font>CheckCanary(stk = 0064FED0)
+		<font color=>unsigned int StackVerify(Stack*) returns 0
 
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
+		</font><font color=>unsigned int StackPop(Stack*, Stack_elem*) returns 0
 
-<font color=blue>  left_canary =       3131961357 </font> <font color=green> (OK) </font>
-<font color=blue> right_canary =       3735928559 </font> <font color=green> (OK) </font>
-CheckHash(_data_store = 00B32F2C, elem_size = 0, hash_val = feedface)
+	</font>StackPop(stk = 0x7fff0b4c2760, front_val = 0x7fff0b4c275c)
 
-get_hash(_data_store = 00B32F2C, elem_size = 0)
+	StackVerify(stk = 0x7fff0b4c2760)
 
-get_hash(void*, unsigned int) returns feedface
+		<font color=>unsigned int StackVerify(Stack*) returns 0
 
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
+		</font>StackDump(stk = 0x7fff0b4c2760, err = 16,
+		                              current_file = "src/stack.h"
+		                              current_func = "unsigned int StackPop(Stack*, Stack_elem*)"
+		                              current_line = 1005)
 
-<font color=blue> hash_val = feedface </font> <font color=green>  (OK) </font>
-<font color=blue>data[00B32F2C]
-	{
-</font>	}
+		<font color=DarkRed>MESSAGE_ERRORS
+			</font><font color=DarkRed>stack is empty</font><font color=MediumBlue>
+			ERROR occurred at:
+             			FILE: src/stack.h
+             			FUNC: unsigned int StackPop(Stack*, Stack_elem*)
+             			LINE: 1005
 
-void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
+			</font><font color=MediumBlue>Stack[0x7fff0b4c2760] "stk" was constructed at
+			file: "test1.cpp"
+			func: "int main()"
+			line: "17"
+			{
+				size     = 0
+				capacity = 4
+			</font><font color=MediumBlue>	left_canary  =       3131961357</font><font color=LimeGreen>(OK)
+			</font><font color=MediumBlue>	right_canary =       3735928559</font><font color=LimeGreen>(OK)
+			</font><font color=MediumBlue>	hash_val = 20e201b28956ea3e</font><font color=LimeGreen>(OK)
+			</font><font color=MediumBlue>	data[0x563929fad514]
+				{
+			</font>	 <font color=MediumBlue>[0] = </font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=Olive>(POISON)</font>
+				 <font color=MediumBlue>[1] = </font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=Olive>(POISON)</font>
+				 <font color=MediumBlue>[2] = </font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=Olive>(POISON)</font>
+				 <font color=MediumBlue>[3] = </font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=MediumBlue>a7</font><font color=Olive>(POISON)</font>
+			<font color=MediumBlue>	}
+			}
+			</font><font color=>void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
 
-unsigned int _StackCtor(Stack*, int, const char*, const char*, const char*, int) returns 8
+		</font><font color=>unsigned int StackPop(Stack*, Stack_elem*) returns 16
 
-StackPush(stk = 0064FED0, push_val = <font color=blue>44</font><font color=blue>1</font><font color=blue>0</font><font color=blue>0</font>)
-
-StackVerify(stk = 0064FED0)
-
-CheckCanary(stk = 0064FED0)
-
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
-
-CheckHash(_data_store = 00B32F2C, elem_size = 0, hash_val = feedface)
-
-get_hash(_data_store = 00B32F2C, elem_size = 0)
-
-get_hash(void*, unsigned int) returns feedface
-
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
-
-unsigned int StackVerify(Stack*) returns 0
-
-StackRealloc(stk = 0064FED0, condition = 1)
-
-StackVerify(stk = 0064FED0)
-
-CheckCanary(stk = 0064FED0)
-
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
-
-CheckHash(_data_store = 00B32F2C, elem_size = 0, hash_val = feedface)
-
-get_hash(_data_store = 00B32F2C, elem_size = 0)
-
-get_hash(void*, unsigned int) returns feedface
-
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
-
-unsigned int StackVerify(Stack*) returns 0
-
-FillPoison(_fillable_elem = 00B32F8C, elem_size = 4,
-                                                left  = 0,
-                                                right = 4, poison_val = 167)
-
-void FillPoison(void*, size_t, unsigned int, unsigned int, unsigned char) returns 0
-
-get_hash(_data_store = 00B32F8C, elem_size = 16)
-
-get_hash(void*, unsigned int) returns 20e201b28956ea3e
-
-StackVerify(stk = 0064FED0)
-
-CheckCanary(stk = 0064FED0)
-
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
-
-CheckHash(_data_store = 00B32F8C, elem_size = 16, hash_val = 20e201b28956ea3e)
-
-get_hash(_data_store = 00B32F8C, elem_size = 16)
-
-get_hash(void*, unsigned int) returns 20e201b28956ea3e
-
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
-
-unsigned int StackVerify(Stack*) returns 0
-
-unsigned int StackRealloc(Stack*, int) returns 0
-
-get_hash(_data_store = 00B32F8C, elem_size = 16)
-
-get_hash(void*, unsigned int) returns 4bf19af75d97c0cf
-
-StackVerify(stk = 0064FED0)
-
-CheckCanary(stk = 0064FED0)
-
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
-
-CheckHash(_data_store = 00B32F8C, elem_size = 16, hash_val = 4bf19af75d97c0cf)
-
-get_hash(_data_store = 00B32F8C, elem_size = 16)
-
-get_hash(void*, unsigned int) returns 4bf19af75d97c0cf
-
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
-
-unsigned int StackVerify(Stack*) returns 0
-
-unsigned int StackPush(Stack*, Stack_elem) returns 0
-
-StackPop(stk = 0064FED0, front_val = 0064FEFC)
-
-StackVerify(stk = 0064FED0)
-
-CheckCanary(stk = 0064FED0)
-
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
-
-CheckHash(_data_store = 00B32F8C, elem_size = 16, hash_val = 4bf19af75d97c0cf)
-
-get_hash(_data_store = 00B32F8C, elem_size = 16)
-
-get_hash(void*, unsigned int) returns 4bf19af75d97c0cf
-
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
-
-unsigned int StackVerify(Stack*) returns 0
-
-FillPoison(_fillable_elem = 00B32F8C, elem_size = 4,
-                                                left  = 0,
-                                                right = 1, poison_val = 167)
-
-void FillPoison(void*, size_t, unsigned int, unsigned int, unsigned char) returns 0
-
-get_hash(_data_store = 00B32F8C, elem_size = 16)
-
-get_hash(void*, unsigned int) returns 20e201b28956ea3e
-
-StackVerify(stk = 0064FED0)
-
-CheckCanary(stk = 0064FED0)
-
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
-
-CheckHash(_data_store = 00B32F8C, elem_size = 16, hash_val = 20e201b28956ea3e)
-
-get_hash(_data_store = 00B32F8C, elem_size = 16)
-
-get_hash(void*, unsigned int) returns 20e201b28956ea3e
-
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
-
-unsigned int StackVerify(Stack*) returns 0
-
-StackRealloc(stk = 0064FED0, condition = 0)
-
-StackVerify(stk = 0064FED0)
-
-CheckCanary(stk = 0064FED0)
-
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
-
-CheckHash(_data_store = 00B32F8C, elem_size = 16, hash_val = 20e201b28956ea3e)
-
-get_hash(_data_store = 00B32F8C, elem_size = 16)
-
-get_hash(void*, unsigned int) returns 20e201b28956ea3e
-
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
-
-unsigned int StackVerify(Stack*) returns 0
-
-unsigned int StackPop(Stack*, Stack_elem*) returns 0
-
-StackPop(stk = 0064FED0, front_val = 0064FEFC)
-
-StackVerify(stk = 0064FED0)
-
-CheckCanary(stk = 0064FED0)
-
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
-
-CheckHash(_data_store = 00B32F8C, elem_size = 16, hash_val = 20e201b28956ea3e)
-
-get_hash(_data_store = 00B32F8C, elem_size = 16)
-
-get_hash(void*, unsigned int) returns 20e201b28956ea3e
-
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
-
-unsigned int StackVerify(Stack*) returns 0
-
-StackDump(stk = 0064FED0, err = 16,
-                              current_file = "src/stack.h"
-                              current_func = "unsigned int StackPop(Stack*, Stack_elem*)"
-                              current_line = 766)
-
-<font color=red> MESSAGE_ERRORS: </font>
-<font color=red> stack is empty </font>
-
-<font color=blue> ERROR occurred at:
-FILE: src/stack.h
-FUNC: unsigned int StackPop(Stack*, Stack_elem*)
-LINE: 766 </font>
-
-<font color=blue> Stack[0064FED0] "test" was constructed at
-file: "test2.cpp"
-func: "int main()"
-line: "17"
-{
-size     = 0
-capacity = 4
-</font>CheckCanary(stk = 0064FED0)
-
-unsigned int StackCheckCanary(Stack*, unsigned int*, unsigned int*) returns 1
-
-<font color=blue>  left_canary =       3131961357 </font> <font color=green> (OK) </font>
-<font color=blue> right_canary =       3735928559 </font> <font color=green> (OK) </font>
-CheckHash(_data_store = 00B32F8C, elem_size = 16, hash_val = 20e201b28956ea3e)
-
-get_hash(_data_store = 00B32F8C, elem_size = 16)
-
-get_hash(void*, unsigned int) returns 20e201b28956ea3e
-
-unsigned int CheckHash(void*, size_t, long long unsigned int) returns 1
-
-<font color=blue> hash_val = 20e201b28956ea3e </font> <font color=green>  (OK) </font>
-<font color=blue>data[00B32F8C]
-	{
-</font>	 <font color=blue>[0] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=lightgreen> (POISON) </font>
-	 <font color=blue>[1] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=lightgreen> (POISON) </font>
-	 <font color=blue>[2] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=lightgreen> (POISON) </font>
-	 <font color=blue>[3] = </font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font><font color=blue>167</font> <font color=lightgreen> (POISON) </font>
-	}
-
-void StackDump(Stack*, unsigned int, const char*, const char*, int) returns 0
-
-unsigned int StackPop(Stack*, Stack_elem*) returns 16
-
-"log.html" CLOSING IS OK
+	</font>"log.html" CLOSING IS OK
 

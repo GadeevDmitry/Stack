@@ -7,6 +7,7 @@
 #include <string.h>
 #include <assert.h>
 #include <inttypes.h>
+#include <stdarg.h>
 
 #define  STACK_DUMPING
 #define CANARY_PROTECTION
@@ -172,28 +173,28 @@ typedef enum _Protection
 
 } Protection;
 
-/*----------------------------------------------FUNCTION_DECLARATION--------------------------------------------------*/
+/*---------------------------------------------FUNCTIONS_DECLARATION--------------------------------------------------*/
 
-unsigned StackVerify(Stack *stk);
+static unsigned StackVerify(Stack *stk);
 
-unsigned StackPush   (Stack *stk, const Stack_elem push_val);
-unsigned StackPop    (Stack *stk, Stack_elem *const front_val = nullptr);
-unsigned StackDtor   (Stack *stk);
-unsigned StackRealloc(Stack *stk, const int condition);
+static unsigned StackPush   (Stack *stk, const Stack_elem push_val);
+static unsigned StackPop    (Stack *stk, Stack_elem *const front_val = nullptr);
+static unsigned StackDtor   (Stack *stk);
+static unsigned StackRealloc(Stack *stk, const int condition);
 
-unsigned  PoisonCheck(void *_verifiable_elem, const size_t elem_size, const unsigned char poison_val,
+static unsigned  PoisonCheck(void *_verifiable_elem, const size_t elem_size, const unsigned char poison_val,
                                                                       const unsigned char mode);
-void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned left,
+static void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned left,
                                                               const unsigned right, const unsigned char poison_val);
-void make_bit_true(unsigned *const num, const unsigned bit_num);
+static void make_bit_true(unsigned *const num, const unsigned bit_num);
 
 #ifdef STACK_DUMPING
 
-    void StackDump(Stack *stk, const unsigned err, const char *current_file,
+    static void StackDump(Stack *stk, const unsigned err, const char *current_file,
                                                    const char *current_func,
                                                    const char *current_line);
 
-    unsigned _StackCtor(Stack *stk, int capacity, const char *stk_name,
+    static unsigned _StackCtor(Stack *stk, int capacity, const char *stk_name,
                                                   const char *stk_func,
                                                   const char *stk_file, const int stk_line);
 
@@ -201,39 +202,277 @@ void make_bit_true(unsigned *const num, const unsigned bit_num);
 
 #ifdef CANARY_PROTECTION
 
-    unsigned StackCheckCanary(Stack *stk, unsigned *const left_canary  = nullptr,
+    static unsigned StackCheckCanary(Stack *stk, unsigned *const left_canary  = nullptr,
                                           unsigned *const right_canary = nullptr);
 
 #endif
 
 #ifdef HASH_PROTECTION
 
-    unsigned long long get_hash(void *_data_store, const size_t elem_size);
-    unsigned CheckHash(void *_data_store, const size_t elem_size, unsigned long long hash_val);
+    static unsigned long long get_hash(void *_data_store, const size_t elem_size);
+    static unsigned CheckHash(void *_data_store, const size_t elem_size, unsigned long long hash_val);
 
 #endif
 
-/*--------------------------------------------------LOG_FUNCTIONS-----------------------------------------------------*/
+/*---------------------------------------LOG_FUNCTIONS_DECLARATION----------------------------------------------------*/
 
-// User must include the "logs.h". It is in the same directory as the "stack.h"
+/**
+*   @brief enum contains HTML-COLORS
+*
+*   @param YELLOW       - "Gold"
+*   @param RED          - "DarkRed"
+*   @param GREEN        - "LimeGreen"
+*   @param BLUE         - "MediumBlue"
+*   @param POISON_COLOR - "Olive"
+*   @param USUAL        - ""
+*/
 
-/*---------------------------------------------LOG_FUNCTIONS_DECLARATION----------------------------------------------*/
+enum COLOR
+{
+    YELLOW,
+    RED,
+    GREEN,
+    BLUE,
+    POISON_COLOR,
+    USUAL
+};
 
-extern FILE *LOG_STREAM;
+const char *COLOR_NAMES[] = 
+{
+    "Gold",
+    "DarkRed",
+    "LimeGreen",
+    "MediumBlue",
+    "Olive",
+    ""
+};
 
-void log_message(const char *message);
-void log_func_end(const char *function_name, unsigned err);
-void log_stack_elem(const Stack_elem *var);
-void log_dumping_ctor(Stack *stk, const int capacity, const char *stk_name,
-                                                      const char *stk_func,
-                                                      const char *stk_file, const int stk_line);
+const char *LOG_FILE_NAME = "log.html";
+FILE       *LOG_STREAM    = nullptr;
+
+char *TAB_SHIFT = nullptr;
+int   TAB_NUM = 0;
+
+/**
+*   @brief Closes log-file. Called by using atexit().
+*
+*   @return 1 if closing is OK. Does abort() if an ERROR found.
+*/
+
+void CLOSE_LOG_STREAM()
+{
+    assert(LOG_STREAM != nullptr);
+
+    fprintf(LOG_STREAM, "\"%s\" CLOSING IS OK\n\n", LOG_FILE_NAME);
+    fclose( LOG_STREAM);
+}
+
+/**
+*   @brief Opens log-file. Ckecks if opening is OK and in this case prints message in the log-file.
+*   @brief Uses atexit() to call CLOSE_LOG_STREAM() after program end.
+*
+*   @return 1 if checking is OK. Does abort() if an ERROR found.
+*/
+
+int OPEN_LOG_STREAM()
+{
+    LOG_STREAM = fopen(LOG_FILE_NAME, "w");
+
+    TAB_SHIFT  = (char *) calloc(1, 100);
+    TAB_NUM    = 0;
+
+    assert(LOG_STREAM != nullptr);
+    assert(TAB_SHIFT  != nullptr);
+
+    setvbuf(LOG_STREAM,   nullptr, _IONBF, 0);
+
+    fprintf(LOG_STREAM, "<pre>\n""\"%s\" OPENING IS OK\n\n", LOG_FILE_NAME);
+
+    atexit(CLOSE_LOG_STREAM);
+    return 1;
+}
+
+int  _OPEN_CLOSE_LOG_STREAM = OPEN_LOG_STREAM();
+
+void log_message(COLOR col, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+
+    fprintf (LOG_STREAM, "<font color=%s>", COLOR_NAMES[col]);
+    vfprintf(LOG_STREAM, fmt, ap);
+    fprintf (LOG_STREAM, "</font>");
+}
+
+void log_func_end(const char *function_name, unsigned err)
+{
+    TAB_SHIFT[--TAB_NUM] = '\0';
+
+    log_message(USUAL, "%s returns %d\n\n%s", function_name, err, TAB_SHIFT);
+}
+
+void log_stack_elem(const Stack_elem *var)
+{
+    unsigned char current_byte_value = 0;
+    unsigned char is_poison = 1;
+
+    for (size_t i = 0; i < sizeof(Stack_elem); ++i)
+    {
+        current_byte_value = *((const unsigned char *) var + i);
+
+        if (current_byte_value != (unsigned char) POISON_BYTE)
+            is_poison = 0;
+
+        log_message(BLUE, "%x", current_byte_value);
+    }
+
+    if (is_poison)
+        log_message(POISON_COLOR, "(POISON)");
+}
+
 void log_make_dump(Stack *stk, const char *current_file,
                                const char *current_func,
-                               int         current_line);
+                               int         current_line)
+{
+    log_message(BLUE, "\n%sERROR occurred at:\n"
+                      "             %sFILE: %s\n"
+                      "             %sFUNC: %s\n"
+                      "             %sLINE: %d\n\n%s", TAB_SHIFT, TAB_SHIFT, current_file, TAB_SHIFT, current_func, TAB_SHIFT, current_line, TAB_SHIFT);    
 
-void log_push(Stack *stk, const Stack_elem push_val);
+    if (stk == nullptr)
+    {
+        fprintf(LOG_STREAM, "Stack[nullptr]\n%s", TAB_SHIFT);
+        return;
+    }
+
+    if (stk->info.variable_name == nullptr) stk->info.variable_name = "nullptr";
+    if (stk->info.file_name     == nullptr) stk->info.file_name     = "nullptr";
+    if (stk->info.function_name == nullptr) stk->info.function_name = "nullptr";
+
+    if (stk->info.variable_name == (const char *) POISON_NAME) stk->info.variable_name = "POISON_NAME";
+    if (stk->info.file_name     == (const char *) POISON_NAME) stk->info.file_name     = "POISON_NAME";
+    if (stk->info.function_name == (const char *) POISON_NAME) stk->info.function_name = "POISON_NAME";
+
+    log_message(BLUE, "Stack[%p] \"%s\" was constructed at\n%s"
+                      "file: \"%s\"\n%s"
+                      "func: \"%s\"\n%s"
+                      "line: \"%d\"\n%s"
+                      "{\n%s"
+                      "\tsize     = %u\n%s"
+                      "\tcapacity = %u\n%s", stk, stk->info.variable_name, TAB_SHIFT,
+                                               stk->info.file_name, TAB_SHIFT, stk->info.function_name, TAB_SHIFT, stk->info.string_number, TAB_SHIFT,
+                                               TAB_SHIFT, stk->size, TAB_SHIFT, stk->capacity, TAB_SHIFT);
+    if (stk->data == nullptr)
+    {
+        log_message(BLUE, "\tdata[nullptr]\n%s}\n%s", TAB_SHIFT, TAB_SHIFT);
+        return;
+    }
+
+    if (stk->data == (Stack_elem *) POISON_DATA)
+    {
+        log_message(BLUE, "\tdata");
+        log_message(POISON_COLOR, "[POISON_DATA]");
+        log_message(BLUE, "\n%s}\n%s", TAB_SHIFT, TAB_SHIFT);
+        return;
+    }
+
+    #ifdef CANARY_PROTECTION
+
+        unsigned left = 0, right = 0;
+
+        StackCheckCanary(stk, &left, &right);
+
+        if (left == LEFT_CANARY)
+        {
+            log_message(BLUE,  "\tleft_canary  = %16u", left);
+            log_message(GREEN, "(OK)\n%s",         TAB_SHIFT);
+        }
+        else
+        {
+            log_message(BLUE,  "\tleft_canary  = %16u", left);
+            log_message(RED,   "(ERROR)\n%s",      TAB_SHIFT);
+        }
+
+        if (right == RIGHT_CANARY)
+        {
+            log_message(BLUE,  "\tright_canary = %16u", right);
+            log_message(GREEN, "(OK)\n%s",          TAB_SHIFT);
+        }
+        else
+        {
+            log_message(BLUE, "\tright_canary = %16u", right);
+            log_message(RED,  "(ERROR)\n%s",       TAB_SHIFT);
+        }
+
+    #endif
+
+    #ifdef HASH_PROTECTION
+
+        unsigned good_hash = CheckHash(stk->data, stk->capacity * sizeof(Stack_elem), stk->hash_val);
+
+        if (good_hash)
+        {
+            log_message(BLUE,  "\thash_val = %llx", stk->hash_val);
+            log_message(GREEN, "(OK)\n%s",            TAB_SHIFT);
+        }
+        else
+        {
+            log_message(BLUE, "\thash_val = %llx", stk->hash_val);
+            log_message(RED,  "(ERROR)\n%s",         TAB_SHIFT);
+        }
+
+    #endif
+
+    log_message(BLUE, "\tdata[%p]\n%s\t{\n%s", stk->data, TAB_SHIFT, TAB_SHIFT);
+
+    for (size_t data_counter = 0; data_counter < stk->capacity; ++data_counter)
+    {
+        putc('\t', LOG_STREAM);
+
+        (data_counter < stk->size) ? putc('*', LOG_STREAM) : putc(' ', LOG_STREAM);
+
+        log_message(BLUE, "[%d] = ", data_counter);
+
+        log_stack_elem(stk->data + data_counter);
+
+        fprintf(LOG_STREAM, "\n%s", TAB_SHIFT);
+    }
+    log_message(BLUE, "\t}\n%s}\n%s", TAB_SHIFT, TAB_SHIFT);
+}
+
+void log_dumping_ctor(Stack *stk, const int capacity, const char *stk_name,
+                                                      const char *stk_func,
+                                                      const char *stk_file, const int stk_line)
+{
+    if (stk_name == nullptr) stk_name = "nullptr";
+    if (stk_func == nullptr) stk_func = "nullptr";
+    if (stk_file == nullptr) stk_file = "nullptr";
+
+    log_message(USUAL, "(dumping)_StackCtor(stk = %p, capacity = %d,\n%s"
+                       "stk_name = \"%s\"\n%s"
+                       "stk_func = \"%s\"\n%s"
+                       "stk_file = \"%s\"\n%s"
+                       "stk_line = %d)\n\n%s\t",
+                                            stk,      capacity,       TAB_SHIFT,
+                        stk_name, TAB_SHIFT,
+                        stk_func, TAB_SHIFT,
+                        stk_file, TAB_SHIFT,
+                        stk_line, TAB_SHIFT);
+    TAB_SHIFT[TAB_NUM++] = '\t';
+}
+
+void log_push(Stack *stk, const Stack_elem push_val)
+{
+    fprintf(LOG_STREAM, "StackPush(stk = %p, push_val = ", stk);
+
+    log_stack_elem(&push_val);
+
+    fprintf(LOG_STREAM, ")\n\n%s\t", TAB_SHIFT);
+    TAB_SHIFT[TAB_NUM++] = '\t';
+}
 
 /*--------------------------------------------------------------------------------------------------------------------*/
+
 /**
 *   @brief Works in 2 modes.
 *   @brief Checks if the variable is filled by "poison_val"     in the first  mode.
@@ -248,7 +487,7 @@ void log_push(Stack *stk, const Stack_elem push_val);
 *   @return In the zero   mode: 1 if all bytes are not equal to "poison_value" and 0 else
 */
 
-unsigned PoisonCheck(void *_verifiable_elem, const size_t elem_size, const unsigned char poison_val,
+static unsigned PoisonCheck(void *_verifiable_elem, const size_t elem_size, const unsigned char poison_val,
                                                                 const unsigned char mode)
 {
     assert(_verifiable_elem != nullptr);
@@ -280,14 +519,17 @@ unsigned PoisonCheck(void *_verifiable_elem, const size_t elem_size, const unsig
 *   @return nothing
 */
 
-void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned left,
+static void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned left,
                                                               const unsigned right, const unsigned char poison_val)
 {
-    fprintf(LOG_STREAM, "FillPoison(_fillable_elem = %p, elem_size = %u,\n"
-                        "                                                left  = %u,\n"
-                        "                                                right = %u, poison_val = %u)\n\n",
-                                    _fillable_elem,      elem_size,      left,
-                                                                         right,      poison_val);
+    fprintf(LOG_STREAM, "FillPoison(_fillable_elem = %p, elem_size = %lu,\n%s"
+                        "                                                left  = %u,\n%s"
+                        "                                                right = %u, poison_val = %u)\n\n%s",
+                                    _fillable_elem,      elem_size, TAB_SHIFT,
+                                                                         left, TAB_SHIFT,
+                                                                         right,      poison_val, TAB_SHIFT);
+    TAB_SHIFT[TAB_NUM++] = '\t';
+
     assert(_fillable_elem != nullptr);
 
     char *fillable_elem = (char *) _fillable_elem;
@@ -310,12 +552,9 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
     *   @return 0 if check failed and 0 else
     */
 
-    unsigned StackCheckCanary(Stack *stk, unsigned *const left_canary, unsigned *const right_canary)
+    static unsigned StackCheckCanary(Stack *stk, unsigned *const left_canary, unsigned *const right_canary)
     {
         assert(stk != nullptr);
-
-        fprintf(LOG_STREAM, "CheckCanary(stk = %p)\n\n",
-                                         stk);
 
         unsigned  left = *(unsigned *) ((unsigned *)stk->data - 1);
         unsigned right = *(unsigned *) (stk->data + stk->capacity);
@@ -325,7 +564,6 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
         if ( left_canary) * left_canary = left ;
         if (right_canary) *right_canary = right;
 
-        log_func_end(__PRETTY_FUNCTION__, ret);
         return ret;
     }
 
@@ -342,11 +580,8 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
     *   @return hash_value
     */
 
-    unsigned long long get_hash(void *_data_store, const size_t elem_size)
+    static unsigned long long get_hash(void *_data_store, const size_t elem_size)
     {
-        fprintf(LOG_STREAM, "get_hash(_data_store = %p, elem_size = %u)\n\n",
-                                      _data_store,      elem_size);
-
         assert(_data_store != nullptr);
 
         unsigned char *data_store = (unsigned char *) _data_store;
@@ -357,7 +592,6 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
             hash_ret = ((hash_ret << 5) + hash_ret) + data_store[counter];
         }
 
-        fprintf(LOG_STREAM,"get_hash(void*, unsigned int) returns %llx\n\n", hash_ret);
         return hash_ret;
     }
 
@@ -371,11 +605,8 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
     *   @return true-value if the "hash_val" is right and false-value else
     */
 
-    unsigned CheckHash(void *_data_store, const size_t elem_size, const unsigned long long hash_val)
+    static unsigned CheckHash(void *_data_store, const size_t elem_size, const unsigned long long hash_val)
     {
-        fprintf(LOG_STREAM, "CheckHash(_data_store = %p, elem_size = %u, hash_val = %llx)\n\n",
-                                       _data_store,      elem_size,      hash_val);
-
         assert(_data_store != nullptr);
 
         unsigned long long     old_hash = hash_val;
@@ -383,7 +614,6 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
 
         unsigned ret = (old_hash == current_hash);
 
-        log_func_end(__PRETTY_FUNCTION__, ret);
         return ret;
     }
 
@@ -427,25 +657,28 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
     *   @return nothing
     */
 
-    void StackDump(Stack *stk, const unsigned err, const char *current_file,
+    static void StackDump(Stack *stk, const unsigned err, const char *current_file,
                                                    const char *current_func,
                                                    int         current_line)
     {
-        fprintf(LOG_STREAM, "StackDump(stk = %p, err = %u,\n"
-                            "                              current_file = \"%s\"\n"
-                            "                              current_func = \"%s\"\n"
-                            "                              current_line = %d)\n\n",
-                                       stk,      err,      current_file,
-                                                           current_func,
-                                                           current_line);
-        log_message("MESSAGE_ERRORS:");
+        fprintf(LOG_STREAM, "StackDump(stk = %p, err = %u,\n%s"
+                            "                              current_file = \"%s\"\n%s"
+                            "                              current_func = \"%s\"\n%s"
+                            "                              current_line = %d)\n\n%s",
+                                       stk,      err, TAB_SHIFT,
+                                                           current_file, TAB_SHIFT,
+                                                           current_func, TAB_SHIFT,
+                                                           current_line, TAB_SHIFT);
+        TAB_SHIFT[TAB_NUM++] = '\t';
+        
+        err == 0 ? log_message(GREEN, "NO_ERRORS\n%s", TAB_SHIFT) : log_message(RED, "MESSAGE_ERRORS\n%s", TAB_SHIFT);
 
         int error_numbers = sizeof(error_message) / sizeof(char *);
 
         for (int i = 0; i <= error_numbers; ++i)
         {
             if (err & (1 << i))
-                log_message(error_message[i]);
+                log_message(RED, error_message[i]);
         }
 
         log_make_dump(stk, current_file,
@@ -476,7 +709,7 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
     *   @note the pointer user need to use &-operator.
     */
 
-    unsigned _StackCtor(Stack *stk, int capacity, const char *stk_name,
+    static unsigned _StackCtor(Stack *stk, int capacity, const char *stk_name,
                                                   const char *stk_func,
                                                   const char *stk_file, const int stk_line)
     {
@@ -583,10 +816,11 @@ void FillPoison(void *_fillable_elem, const size_t elem_size, const unsigned lef
 *   @return bit-mask which encodes the errors
 */
 
-unsigned StackVerify(Stack *stk)
+static unsigned StackVerify(Stack *stk)
 {
-    fprintf(LOG_STREAM, "StackVerify(stk = %p)\n\n",
-                                     stk);
+    fprintf(LOG_STREAM, "StackVerify(stk = %p)\n\n%s",
+                                     stk, TAB_SHIFT);
+    TAB_SHIFT[TAB_NUM++] = '\t';
 
     unsigned err = 0;
 
@@ -675,7 +909,7 @@ unsigned StackVerify(Stack *stk)
 *   @return nothing
 */
 
-void make_bit_true(unsigned *const num, const unsigned bit_num)
+static void make_bit_true(unsigned *const num, const unsigned bit_num)
 {
     assert (num);
 
@@ -691,7 +925,7 @@ void make_bit_true(unsigned *const num, const unsigned bit_num)
 *   @return bit-mask which encodes the errors from "enum _StackError"
 */
 
-unsigned StackPush(Stack *stk, const Stack_elem push_val)
+static unsigned StackPush(Stack *stk, const Stack_elem push_val)
 {
     log_push(stk, push_val);
 
@@ -749,10 +983,11 @@ unsigned StackPush(Stack *stk, const Stack_elem push_val)
 *   @return bit-mask which encodes the errors from "enum _StackError"
 */
 
-unsigned StackPop(Stack *stk, Stack_elem *const front_val)
+static unsigned StackPop(Stack *stk, Stack_elem *const front_val)
 {
-    fprintf(LOG_STREAM, "StackPop(stk = %p, front_val = %p)\n\n",
-                                  stk,      front_val);
+    fprintf(LOG_STREAM, "StackPop(stk = %p, front_val = %p)\n\n%s",
+                                  stk,      front_val, TAB_SHIFT);
+    TAB_SHIFT[TAB_NUM++] = '\t';
 
     unsigned err = 0;
     Stack_assert(stk, &err);
@@ -805,10 +1040,11 @@ unsigned StackPop(Stack *stk, Stack_elem *const front_val)
 *   @return bit-mask which encodes the errors from "enum _StackError"
 */
 
-unsigned StackRealloc(Stack *stk, const int condition)
+static unsigned StackRealloc(Stack *stk, const int condition)
 {
-    fprintf(LOG_STREAM, "StackRealloc(stk = %p, condition = %d)\n\n",
-                                      stk,      condition);
+    fprintf(LOG_STREAM, "StackRealloc(stk = %p, condition = %d)\n\n%s",
+                                      stk,      condition, TAB_SHIFT);
+    TAB_SHIFT[TAB_NUM++] = '\t';
 
     unsigned err = 0;
     Stack_assert(stk, &err);
@@ -890,10 +1126,11 @@ unsigned StackRealloc(Stack *stk, const int condition)
 *   @return bit-mask which encodes the errors from "enum _StackError"
 */
 
-unsigned StackDtor(Stack *stk)
+static unsigned StackDtor(Stack *stk)
 {
-    fprintf(LOG_STREAM, "StackDtor(stk = %p)\n\n",
-                                   stk);
+    fprintf(LOG_STREAM, "StackDtor(stk = %p)\n\n%s",
+                                   stk, TAB_SHIFT);
+    TAB_SHIFT[TAB_NUM++] = '\t';
 
     unsigned err = 0;
     Stack_assert(stk, &err);

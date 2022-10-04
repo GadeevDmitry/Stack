@@ -1,5 +1,39 @@
+/**
+*   @brief enum contains HTML-COLORS
+*
+*   @param YELLOW       - "Gold"
+*   @param RED          - "DarkRed"
+*   @param GREEN        - "LimeGreen"
+*   @param BLUE         - "MediumBlue"
+*   @param POISON_COLOR - "Olive"
+*   @param USUAL        - ""
+*/
+
+enum COLOR
+{
+    YELLOW,
+    RED,
+    GREEN,
+    BLUE,
+    POISON_COLOR,
+    USUAL
+};
+
+const char *COLOR_NAMES[] = 
+{
+    "Gold",
+    "DarkRed",
+    "LimeGreen",
+    "MediumBlue",
+    "Olive",
+    ""
+};
+
 const char *LOG_FILE_NAME = "log.html";
 FILE       *LOG_STREAM    = nullptr;
+
+char *TAB_SHIFT = nullptr;
+int   TAB_NUM = 0;
 
 /**
 *   @brief Closes log-file. Called by using atexit().
@@ -25,7 +59,12 @@ void CLOSE_LOG_STREAM()
 int OPEN_LOG_STREAM()
 {
     LOG_STREAM = fopen(LOG_FILE_NAME, "w");
-    assert( LOG_STREAM != nullptr);
+
+    TAB_SHIFT  = (char *) calloc(1, 100);
+    TAB_NUM    = 0;
+
+    assert(LOG_STREAM != nullptr);
+    assert(TAB_SHIFT  != nullptr);
 
     setvbuf(LOG_STREAM,   nullptr, _IONBF, 0);
 
@@ -37,14 +76,21 @@ int OPEN_LOG_STREAM()
 
 int  _OPEN_CLOSE_LOG_STREAM = OPEN_LOG_STREAM();
 
-void log_message(const char *message)
+void log_message(COLOR col, const char *fmt, ...)
 {
-    fprintf(LOG_STREAM, "<font color=red> %s </font>\n", message);
+    va_list ap;
+    va_start(ap, fmt);
+
+    fprintf (LOG_STREAM, "<font color=%s>", COLOR_NAMES[col]);
+    vfprintf(LOG_STREAM, fmt, ap);
+    fprintf (LOG_STREAM, "</font>");
 }
 
 void log_func_end(const char *function_name, unsigned err)
 {
-    fprintf(LOG_STREAM, "%s returns %d\n\n", function_name, err);
+    TAB_SHIFT[--TAB_NUM] = '\0';
+
+    log_message(USUAL, "%s returns %d\n\n%s", function_name, err, TAB_SHIFT);
 }
 
 void log_stack_elem(const Stack_elem *var)
@@ -59,25 +105,25 @@ void log_stack_elem(const Stack_elem *var)
         if (current_byte_value != (unsigned char) POISON_BYTE)
             is_poison = 0;
 
-        fprintf(LOG_STREAM, "<font color=blue>%u</font>", current_byte_value);
+        log_message(BLUE, "%x", current_byte_value);
     }
 
     if (is_poison)
-        fprintf(LOG_STREAM, " <font color=lightgreen> (POISON) </font>");
+        log_message(POISON_COLOR, "(POISON)");
 }
 
 void log_make_dump(Stack *stk, const char *current_file,
                                const char *current_func,
                                int         current_line)
 {
-    fprintf(LOG_STREAM, "\n<font color=blue> ERROR occurred at:\n"
-                        "FILE: %s\n"
-                        "FUNC: %s\n"
-                        "LINE: %d </font>\n\n", current_file, current_func, current_line);
+    log_message(BLUE, "\n%sERROR occurred at:\n"
+                      "             %sFILE: %s\n"
+                      "             %sFUNC: %s\n"
+                      "             %sLINE: %d\n\n%s", TAB_SHIFT, TAB_SHIFT, current_file, TAB_SHIFT, current_func, TAB_SHIFT, current_line, TAB_SHIFT);    
 
     if (stk == nullptr)
     {
-        fprintf(LOG_STREAM, "Stack[nullptr]\n");
+        fprintf(LOG_STREAM, "Stack[nullptr]\n%s", TAB_SHIFT);
         return;
     }
 
@@ -89,24 +135,26 @@ void log_make_dump(Stack *stk, const char *current_file,
     if (stk->info.file_name     == (const char *) POISON_NAME) stk->info.file_name     = "POISON_NAME";
     if (stk->info.function_name == (const char *) POISON_NAME) stk->info.function_name = "POISON_NAME";
 
-    fprintf(LOG_STREAM, "<font color=blue> Stack[%p] \"%s\" was constructed at\n"
-                            "file: \"%s\"\n"
-                            "func: \"%s\"\n"
-                            "line: \"%d\"\n"
-                            "{\n"
-                            "size     = %u\n"
-                            "capacity = %u\n</font>", stk, stk->info.variable_name,
-                                               stk->info.file_name, stk->info.function_name, stk->info.string_number,
-                                               stk->size, stk->capacity);
+    log_message(BLUE, "Stack[%p] \"%s\" was constructed at\n%s"
+                      "file: \"%s\"\n%s"
+                      "func: \"%s\"\n%s"
+                      "line: \"%d\"\n%s"
+                      "{\n%s"
+                      "\tsize     = %u\n%s"
+                      "\tcapacity = %u\n%s", stk, stk->info.variable_name, TAB_SHIFT,
+                                               stk->info.file_name, TAB_SHIFT, stk->info.function_name, TAB_SHIFT, stk->info.string_number, TAB_SHIFT,
+                                               TAB_SHIFT, stk->size, TAB_SHIFT, stk->capacity, TAB_SHIFT);
     if (stk->data == nullptr)
     {
-        fprintf(LOG_STREAM, "<font color=blue>data[nullptr]\n\n </font>");
+        log_message(BLUE, "\tdata[nullptr]\n%s}\n%s", TAB_SHIFT, TAB_SHIFT);
         return;
     }
 
     if (stk->data == (Stack_elem *) POISON_DATA)
     {
-        fprintf(LOG_STREAM, "<font color=blue>data </font>[<font color=lightgreen>POISON_DATA</font>]\n\n");
+        log_message(BLUE, "\tdata");
+        log_message(POISON_COLOR, "[POISON_DATA]");
+        log_message(BLUE, "\n%s}\n%s", TAB_SHIFT, TAB_SHIFT);
         return;
     }
 
@@ -116,11 +164,27 @@ void log_make_dump(Stack *stk, const char *current_file,
 
         StackCheckCanary(stk, &left, &right);
 
-        (left  ==  LEFT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue>  left_canary = %16u </font> <font color=green> (OK) </font>\n",     left) :
-                                  fprintf(LOG_STREAM, "<font color=blue>  left_canary = %16u </font> <font color=red> (ERROR) </font>\n",    left) ;
+        if (left == LEFT_CANARY)
+        {
+            log_message(BLUE,  "\tleft_canary  = %16u", left);
+            log_message(GREEN, "(OK)\n%s",         TAB_SHIFT);
+        }
+        else
+        {
+            log_message(BLUE,  "\tleft_canary  = %16u", left);
+            log_message(RED,   "(ERROR)\n%s",      TAB_SHIFT);
+        }
 
-        (right == RIGHT_CANARY) ? fprintf(LOG_STREAM, "<font color=blue> right_canary = %16u </font> <font color=green> (OK) </font>\n",    right) :
-                                  fprintf(LOG_STREAM, "<font color=blue> right_canary = %16u </font> <font color=red> (ERROR) </font>\n",   right) ;
+        if (right == RIGHT_CANARY)
+        {
+            log_message(BLUE,  "\tright_canary = %16u", right);
+            log_message(GREEN, "(OK)\n%s",          TAB_SHIFT);
+        }
+        else
+        {
+            log_message(BLUE, "\tright_canary = %16u", right);
+            log_message(RED,  "(ERROR)\n%s",       TAB_SHIFT);
+        }
 
     #endif
 
@@ -129,13 +193,19 @@ void log_make_dump(Stack *stk, const char *current_file,
         unsigned good_hash = CheckHash(stk->data, stk->capacity * sizeof(Stack_elem), stk->hash_val);
 
         if (good_hash)
-            fprintf(LOG_STREAM, "<font color=blue> hash_val = %llx </font> <font color=green>  (OK) </font>\n", stk->hash_val);
+        {
+            log_message(BLUE,  "\thash_val = %llx", stk->hash_val);
+            log_message(GREEN, "(OK)\n%s",            TAB_SHIFT);
+        }
         else
-            fprintf(LOG_STREAM, "<font color=blue> hash_val = %llx </font> <font color=red> (ERROR) </font>\n", stk->hash_val);
+        {
+            log_message(BLUE, "\thash_val = %llx", stk->hash_val);
+            log_message(RED,  "(ERROR)\n%s",         TAB_SHIFT);
+        }
 
     #endif
 
-    fprintf(LOG_STREAM, "<font color=blue>data[%p]\n\t{\n</font>", stk->data);
+    log_message(BLUE, "\tdata[%p]\n%s\t{\n%s", stk->data, TAB_SHIFT, TAB_SHIFT);
 
     for (size_t data_counter = 0; data_counter < stk->capacity; ++data_counter)
     {
@@ -143,13 +213,13 @@ void log_make_dump(Stack *stk, const char *current_file,
 
         (data_counter < stk->size) ? putc('*', LOG_STREAM) : putc(' ', LOG_STREAM);
 
-        fprintf(LOG_STREAM, "<font color=blue>[%d] = </font>", data_counter);
+        log_message(BLUE, "[%d] = ", data_counter);
 
         log_stack_elem(stk->data + data_counter);
 
-        putc('\n', LOG_STREAM);
+        fprintf(LOG_STREAM, "\n%s", TAB_SHIFT);
     }
-    fprintf(LOG_STREAM, "\t}\n\n");
+    log_message(BLUE, "\t}\n%s}\n%s", TAB_SHIFT, TAB_SHIFT);
 }
 
 void log_dumping_ctor(Stack *stk, const int capacity, const char *stk_name,
@@ -160,15 +230,17 @@ void log_dumping_ctor(Stack *stk, const int capacity, const char *stk_name,
     if (stk_func == nullptr) stk_func = "nullptr";
     if (stk_file == nullptr) stk_file = "nullptr";
 
-    fprintf(LOG_STREAM, "(dumping)_StackCtor(stk = %p, capacity = %d,\n"
-                        "                                             stk_name = \"%s\"\n"
-                        "                                             stk_func = \"%s\"\n"
-                        "                                             stk_file = \"%s\"\n"
-                        "                                             stk_line = %d)\n\n",
-                                             stk,      capacity,      stk_name,
-                                                                      stk_func,
-                                                                      stk_file,
-                                                                      stk_line);
+    log_message(USUAL, "(dumping)_StackCtor(stk = %p, capacity = %d,\n%s"
+                       "stk_name = \"%s\"\n%s"
+                       "stk_func = \"%s\"\n%s"
+                       "stk_file = \"%s\"\n%s"
+                       "stk_line = %d)\n\n%s\t",
+                                            stk,      capacity,       TAB_SHIFT,
+                        stk_name, TAB_SHIFT,
+                        stk_func, TAB_SHIFT,
+                        stk_file, TAB_SHIFT,
+                        stk_line, TAB_SHIFT);
+    TAB_SHIFT[TAB_NUM++] = '\t';
 }
 
 void log_push(Stack *stk, const Stack_elem push_val)
@@ -177,5 +249,6 @@ void log_push(Stack *stk, const Stack_elem push_val)
 
     log_stack_elem(&push_val);
 
-    fprintf(LOG_STREAM, ")\n\n");
+    fprintf(LOG_STREAM, ")\n\n%s\t", TAB_SHIFT);
+    TAB_SHIFT[TAB_NUM++] = '\t';
 }
